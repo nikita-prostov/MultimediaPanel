@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\placeholder.png" />
+  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="NAudio" Version="2.3.0" />
+		<PackageReference Include="VkNet" Version="1.79.0-alpha-137" />
+		<PackageReference Include="VkNet.AudioBypassService" Version="1.7.7" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Utils\Utils.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\placeholder.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	</ItemGroup>
+</Project>

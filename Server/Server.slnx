@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="FinanceModule/FinanceModule.csproj" />
+  <Project Path="JobModule/JobModule.csproj" />
+  <Project Path="MainApp/MainApp.csproj" />
+  <Project Path="MusicModule/MusicModule.csproj" />
+  <Project Path="NotificationModule/GameEventModule.csproj" />
+  <Project Path="SCSSdkClient/SCSSdkClient.csproj" Id="b62f8e57-9d8c-4ea2-90e4-1f6b09dce468" />
+  <Project Path="Utils/Utils.csproj" />
+</Solution>
