@@ -1,7 +1,11 @@
+using Microsoft.EntityFrameworkCore;
 using MusicModule.Enums;
 using MusicModule.Loader;
 using MusicModule.Models;
 using MusicModule.Services;
+using NotificationsModule.Data;
+using NotificationsModule.Services;
+using SCSSdkClient;
 using System.Web;
 using VkNet;
 using VkNet.Enums.Filters;
@@ -18,7 +22,7 @@ Console.WriteLine("Change track source:");
 Console.WriteLine("1) My music");
 Console.WriteLine("2) Recomendations");
 Console.WriteLine("3) Local - don't work");
-var key = Console.ReadKey();
+var key = Console.ReadKey(true);
 var tracks = new List<AudioTrack>();
 string accessToken = "";
 long userId;
@@ -29,8 +33,11 @@ try
     {
         
         Console.WriteLine("Authorization instruction:");
-        Console.WriteLine("Open link: https://oauth.vk.com/authorize?client_id=6287487&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=audio,offline&response_type=token&v=5.131");
-        Console.Write(" after confirmation, copy your new URL:");
+        Console.WriteLine("Open link: ");
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine("https://oauth.vk.com/authorize?client_id=6287487&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=audio,offline&response_type=token&v=5.131");
+        Console.ResetColor();
+        Console.WriteLine("after confirmation, copy your new URL:");
         string url = Console.ReadLine();
         (string? t, long? u) = Parse(url);
         accessToken = t ?? string.Empty;
@@ -60,6 +67,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 var musicService = new MusicService(path, cachePath, 0.1f, tracks,api,source,accessToken);
 builder.Services.AddSingleton(musicService);
+builder.Services.AddSingleton<SCSSdkTelemetry>();
+
+var notificationDbFilePath = Path.Combine(path, "notification.db");
+builder.Services.AddDbContext<NotificationDbContext>(options => options.UseSqlite(notificationDbFilePath));
+
+builder.Services.AddScoped<NotificationService>();
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -69,6 +83,12 @@ app.UseWebSockets();
 app.MapControllers();
 
 app.Run();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 static (string? accessToken, long? userId) Parse(string url)
 {

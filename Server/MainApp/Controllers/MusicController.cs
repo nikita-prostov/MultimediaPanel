@@ -1,12 +1,8 @@
-﻿using MainApp.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MusicModule.Enums;
 using MusicModule.Loader;
 using MusicModule.Services;
-using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
-using Utils;
 
 namespace MainApp.Controllers
 {

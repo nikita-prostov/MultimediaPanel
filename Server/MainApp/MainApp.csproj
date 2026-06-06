@@ -7,10 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FinanceModule\FinanceModule.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\JobModule\JobModule.csproj" />
     <ProjectReference Include="..\MusicModule\MusicModule.csproj" />
-    <ProjectReference Include="..\NotificationModule\GameEventModule.csproj" />
+    <ProjectReference Include="..\NotificationModule\NotificationsModule.csproj" />
     <ProjectReference Include="..\SCSSdkClient\SCSSdkClient.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
