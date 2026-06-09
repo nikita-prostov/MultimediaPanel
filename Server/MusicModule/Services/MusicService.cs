@@ -62,12 +62,27 @@ namespace MusicModule.Services
             }
         }
 
+        public async Task PlayTrackAsync(long audioId, long ownerId)
+        {
+            if(vkApi != null)
+            {
+                isLocked = true;
+                var track = (await vkApi.Audio.GetByIdAsync([.. new List<string> { $"{ownerId}_{audioId}" }])).ToList()[0];
+                await ImageLoader.LoadAsync(cachePathThumb, track.Album.Thumb.Photo300, track.Album.Id);
+                var file = await Converter.ConvertAsync(cachePath, track.Url.ToString(), track.Id.Value, track.OwnerId.Value);
+                await player.PlayAsync(file);
+                state.Track = new AudioTrack(track, vkApi.UserId.Value);
+                state.Position = 0;
+                isLocked = false;
+            }
+        }
+
         public async Task PlayAsync(int pos = -1)
         {
             if (isLocked) return;
 
-            string saveTo = state.Source == TracksSource.Recomendations ? cachePath : savePath;
-            string saveThumbTo = state.Source == TracksSource.Recomendations ? cachePathThumb : savePathThumb;
+            string saveTo = state.Source == TracksSource.Recomendations ? Path.Combine(cachePath, "Recomendations") : savePath;
+            string saveThumbTo = state.Source == TracksSource.Recomendations ? Path.Combine(cachePathThumb, "Recomendations") : savePathThumb;
             if (pos >= 0 && pos != current)
             {
                 current = pos;
@@ -162,11 +177,45 @@ namespace MusicModule.Services
             useShuffled = false;
         }
 
-        public List<AudioTrack> GetList(int page)
+        public GetListResponse GetList(int page)
         {
             var pageSize = 100;
             var list = useShuffled ? shuffledTracks : tracks;
-            return [.. list.Skip((page - 1) * pageSize).Take(pageSize)];
+            return new GetListResponse
+            {
+                Page = page,
+                TotalPages = (int)MathF.Ceiling((float)list.Count / pageSize),
+                Tracks = [.. list.Skip((page - 1) * pageSize).Take(pageSize)]
+            };
+        }
+
+        public async Task<List<AudioTrack>> SearchAsync(string query, bool ignoreCase)
+        {
+            var comparison = ignoreCase
+                ? StringComparison.CurrentCultureIgnoreCase
+                : StringComparison.CurrentCulture;
+
+            var findedTracks = new List<AudioTrack>();
+
+            if (vkApi != null)
+            {
+                var res = await vkApi.Audio.SearchAsync(new AudioSearchParams
+                {
+                    SearchOwn = false,
+                    Query = ignoreCase ? query.ToLower() : query
+                });
+                foreach (var track in res)
+                {
+                    if (track.Url != null)
+                        findedTracks.Add(new AudioTrack(track, vkApi.UserId.Value));
+                }
+            }
+
+            findedTracks.AddRange(tracks.Where(t => t.Artist.Contains(query, comparison) || t.Title.Contains(query, comparison)));
+
+            var uniqueTracks = findedTracks.GroupBy(t => t.FullId).Select(g => g.First()).ToList();
+
+            return uniqueTracks;
         }
 
         public async Task<(byte[]?,string?)> GetThumbAsync(long albumId)
@@ -230,7 +279,7 @@ namespace MusicModule.Services
                 state.Source = source;
             }
 
-            var newTracks = await TrackLoader.LoadAsync(source, vkApi, dbContext, savePath, page);
+            var newTracks = await TrackLoader.LoadAsync(source, vkApi, dbContext, savePath, page, myTracks: tracks);
 
             if (newTracks.Count == 0) return;
 

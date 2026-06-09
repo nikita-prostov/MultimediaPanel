@@ -21,6 +21,9 @@ namespace MusicModule.Models
         [JsonIgnore]
         public string OriginalThumbUrl { get; set; }
 
+        [JsonIgnore]
+        public string FullId => $"{OwnerId}_{Id}";
+
         public AudioTrack(Audio audio, long userId) : this()
         {
             Id = audio.Id.Value;

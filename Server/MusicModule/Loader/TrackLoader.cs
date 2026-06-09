@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using VkNet;
+using VkNet.Enums;
 using VkNet.Enums.Filters;
 using VkNet.Model;
 
@@ -13,7 +14,7 @@ namespace MusicModule.Loader
 {
     public static class TrackLoader
     {
-        public static async Task<List<AudioTrack>> LoadAsync(TracksSource source, VkApi? api = null, MusicDbContext? dbContext = null, string? path = null, int page = 1)
+        public static async Task<List<AudioTrack>> LoadAsync(TracksSource source, VkApi? api = null, MusicDbContext? dbContext = null, string? path = null, int page = 1,List<AudioTrack>? myTracks = null)
         {
             List<AudioTrack> tracks = [];
             switch (source)
@@ -23,7 +24,7 @@ namespace MusicModule.Loader
                         ArgumentNullException.ThrowIfNull(api);
 
                         Console.WriteLine("Loading you tracks from VK Music...");
-                        tracks = await LoadMyMusicAsync(api, page);
+                        tracks = await LoadMyMusicAsync(api);
                         break;
                     }
                 case TracksSource.Recomendations:
@@ -31,7 +32,7 @@ namespace MusicModule.Loader
                         ArgumentNullException.ThrowIfNull(api);
 
                         Console.WriteLine("Loading you tracks from recomendations...");
-                        tracks = await LoadFromRecomenndationsAsync(api);
+                        tracks = await LoadFromRecomenndationsAsync(api, myTracks ?? []);
                         break;
                     }
                 case TracksSource.Local:
@@ -39,7 +40,7 @@ namespace MusicModule.Loader
                         ArgumentNullException.ThrowIfNull(dbContext);
                         ArgumentNullException.ThrowIfNull(path);
 
-                        Console.WriteLine("Loading you tracks from recomendations...");
+                        Console.WriteLine("Loading you tracks from local cache...");
                         tracks = await LoadFromLocalCacheAsync(dbContext,path, page);
                         break;
                     }
@@ -48,7 +49,7 @@ namespace MusicModule.Loader
             return tracks;
         }
 
-        private static async Task<List<AudioTrack>> LoadMyMusicAsync(VkApi api, int page = 1)
+        private static async Task<List<AudioTrack>> LoadMyMusicAsync(VkApi api)
         {
             if (!api.IsAuthorized || !api.UserId.HasValue)
             {
@@ -57,14 +58,13 @@ namespace MusicModule.Loader
             }
 
             var res = new List<AudioTrack>();
-            int batchSize = 100;
-            long offset = (page - 1) * batchSize;
+            long offset = 0;
 
             var music = await api.Audio.GetAsync(new AudioGetParams
             {
                 OwnerId = api.UserId.Value,
-                Count = batchSize,
-                Offset = offset
+                Offset = offset,
+                Count = 5999
             });
 
             foreach (var track in music)
@@ -76,7 +76,7 @@ namespace MusicModule.Loader
             return res;
         }
 
-        private static async Task<List<AudioTrack>> LoadFromRecomenndationsAsync(VkApi api)
+        private static async Task<List<AudioTrack>> LoadFromRecomenndationsAsync(VkApi api,List<AudioTrack> myTracks)
         {
             if (!api.IsAuthorized || !api.UserId.HasValue)
             {
@@ -84,11 +84,12 @@ namespace MusicModule.Loader
                 return [];
             }
 
-            var music = await api.Audio.GetRecommendationsAsync(userId:api.UserId.Value, shuffle: false, count: 100,offset:0);
+            var music = await api.Audio.GetRecommendationsAsync(userId:api.UserId.Value);
             var res = new List<AudioTrack>();
             foreach (var track in music)
             {
-                res.Add(new(track,api.UserId.Value));
+                var audioTrack = new AudioTrack(track, api.UserId.Value);
+                res.Add(audioTrack);
             }
             return res;
         }
