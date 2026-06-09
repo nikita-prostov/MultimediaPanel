@@ -69,18 +69,20 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 
-var musicService = new MusicService(path, cachePath, 0.1f, tracks,api,source,accessToken);
+var musicDbFilePath = Path.Combine(path, "musicDb.db");
+var musicDbOptions = new DbContextOptionsBuilder<MusicDbContext>();
+musicDbOptions.UseSqlite("Data Source=" + musicDbFilePath);
+var musicDbContext = new MusicDbContext(musicDbOptions.Options);
+
+var musicService = new MusicService(musicDbContext,path, cachePath, 0.1f, tracks,api,source,accessToken);
 builder.Services.AddSingleton(musicService);
 builder.Services.AddSingleton<SCSSdkTelemetry>();
 
 var notificationDbFilePath = Path.Combine(path, "notification.db");
-builder.Services.AddDbContext<NotificationDbContext>(options => options.UseSqlite(notificationDbFilePath));
+builder.Services.AddDbContext<NotificationDbContext>(options => options.UseSqlite("Data Source=" + notificationDbFilePath));
 
 var jobDbFilePath = Path.Combine(path, "jobHistory.db");
-builder.Services.AddDbContext<JobDbContext>(options => options.UseSqlite(jobDbFilePath));
-
-var musicDbFilePath = Path.Combine(path, "musicDb.db");
-builder.Services.AddDbContext<MusicDbContext>(options => options.UseSqlite(musicDbFilePath));
+builder.Services.AddDbContext<JobDbContext>(options => options.UseSqlite("Data Source=" + jobDbFilePath));
 
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<JobService>();
