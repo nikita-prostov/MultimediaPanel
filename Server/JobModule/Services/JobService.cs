@@ -1,6 +1,7 @@
 ﻿using JobModule.Data;
 using JobModule.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SCSSdkClient;
 using SCSSdkClient.Object;
 using System;
@@ -13,16 +14,15 @@ namespace JobModule.Services
     public sealed class JobService : IDisposable
     {
         private readonly SCSSdkTelemetry telemetry;
-        private readonly JobDbContext dbContext;
+        private readonly IServiceScopeFactory scopeFactory;
         public CurrentJobInfo? CurrentJobInfo { get; set; } = null;
-        public JobService(SCSSdkTelemetry telemetry, JobDbContext dbContext) 
+        public JobService(IServiceScopeFactory scopeFactory, SCSSdkTelemetry telemetry) 
         {
             this.telemetry = telemetry;
-            this.dbContext = dbContext;
             this.telemetry.Data += OnDataChanged;
         }
 
-        public async Task<List<JobInfoDto>> GetAll(int page = 1)
+        public async Task<List<JobInfoDto>> GetAll(JobDbContext dbContext,int page = 1)
         {
             return await dbContext.Jobs
                 .OrderBy(j => j.FinishedAt)
@@ -102,8 +102,7 @@ namespace JobModule.Services
                     IsDeliveried = true,
                     Penalty = 0
                 };
-                dbContext.Add(jobInfo);
-                dbContext.SaveChanges();
+                Save(jobInfo);
             }
 
             if (data.SpecialEventsValues.JobCancelled && CurrentJobInfo != null)
@@ -123,9 +122,17 @@ namespace JobModule.Services
                     IsDeliveried = false,
                     Penalty = data.GamePlay.JobCancelled.Penalty,
                 };
-                dbContext.Add(jobInfo);
-                dbContext.SaveChanges();
+                Save(jobInfo);
             }
+        }
+
+        private async void Save(JobInfo jobInfo)
+        {
+            using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<JobDbContext>();
+            dbContext.Add(jobInfo);
+            await dbContext.SaveChangesAsync();
+
         }
 
         public void Dispose()

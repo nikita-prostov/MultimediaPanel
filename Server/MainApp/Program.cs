@@ -9,6 +9,7 @@ using NotificationsModule.Data;
 using NotificationsModule.Services;
 using SCSSdkClient;
 using System.Web;
+using TransportInfoModule.Services;
 using VkNet;
 using VkNet.Enums.Filters;
 using VkNet.Model;
@@ -79,6 +80,7 @@ builder.Services.AddDbContext<JobDbContext>(options => options.UseSqlite(jobDbFi
 
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<JobService>();
+builder.Services.AddSingleton<TransportInfoService>();
 
 builder.Services.AddControllers();
 

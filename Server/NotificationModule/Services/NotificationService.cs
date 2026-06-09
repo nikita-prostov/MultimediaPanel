@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using NotificationsModule.Data;
 using NotificationsModule.Enums;
 using NotificationsModule.Models;
@@ -12,20 +13,20 @@ namespace NotificationsModule.Services
 {
     public sealed class NotificationService : IDisposable
     {
-        private readonly NotificationDbContext dbContext;
+        private readonly IServiceScopeFactory scopeFactory;
         private readonly SCSSdkTelemetry telemetry;
         private SCSTelemetry data = new();
 
         public NotificationDto? LastNotification { get; set; }
 
-        public NotificationService(NotificationDbContext dbContext, SCSSdkTelemetry telemetry)
+        public NotificationService(IServiceScopeFactory scopeFactory, SCSSdkTelemetry telemetry)
         {
-            this.dbContext = dbContext;
+            this.scopeFactory = scopeFactory;
             this.telemetry = telemetry;
             this.telemetry.Data += OnDataChanged;
         }
 
-        public async Task<List<NotificationDto>> GetListAsync(int page)
+        public async Task<List<NotificationDto>> GetListAsync(NotificationDbContext dbContext, int page)
         {
             return await dbContext.Notifications
                 .OrderByDescending(n => n.DateTime)
@@ -44,7 +45,7 @@ namespace NotificationsModule.Services
                 .ToListAsync();
         }
 
-        public async Task<List<NotificationDto>> GetFilteredListAsync(int page,DateTime? from = null, DateTime? to = null,NotificationType? type = null, string? title = null)
+        public async Task<List<NotificationDto>> GetFilteredListAsync(NotificationDbContext dbContext,int page,DateTime? from = null, DateTime? to = null,NotificationType? type = null, string? title = null)
         {
             from ??= DateTime.MinValue;
             to ??= data.CommonValues.GameTime.Date;
@@ -125,6 +126,19 @@ namespace NotificationsModule.Services
             Save();
         }
 
+        private void OnTruckWarning(string subtitle)
+        {
+            LastNotification = new()
+            {
+                Title = "Предупреждение системы",
+                SubTitle = subtitle,
+                Amount = -1,
+                Type = NotificationType.TruckWarnings,
+                DateTime = data.CommonValues.GameTime.Date
+            };
+            Save();
+        }
+
         private static string GetOffenceDescription(Offence offence) => offence switch
             {
                 Offence.Crash => "Столкновение с ТС",
@@ -145,16 +159,25 @@ namespace NotificationsModule.Services
         private void OnDataChanged(SCSTelemetry data, bool newTimestamp)
         {
             this.data = data;
+            var warnings = data.TruckValues.CurrentValues.DashboardValues.WarningValues;
             if (data.SpecialEventsValues.Tollgate) OnTollgate();
             if (data.SpecialEventsValues.Ferry) OnFerry();
             if (data.SpecialEventsValues.Train) OnTrain();
             if (data.SpecialEventsValues.Fined) OnFined();
-            else LastNotification = null;
+            if (warnings.WaterTemperature) OnTruckWarning("Перегрев двигателя: температура охлаждающей жидкости превышает допустимое значение");
+            if (warnings.OilPressure) OnTruckWarning("Падение давления моторного масла ниже критической отметки");
+            if (warnings.AirPressure) OnTruckWarning("Недостаточное давление воздуха в тормозной системе");
+            if (warnings.AirPressureEmergency) OnTruckWarning("Аварийное падение давления воздуха. Торможение может быть неэффективным");
+            if (warnings.FuelW) OnTruckWarning("Минимальный остаток топлива. Требуется дозаправка");
+            if (warnings.AdBlue) OnTruckWarning("Критически низкий уровень реагента AdBlue");
+            if (warnings.BatteryVoltage) OnTruckWarning("Напряжение аккумуляторной батареи ниже номинального значения");
         }
 
-        private void Save()
+        private async void Save()
         {
-            if(LastNotification == null) return;
+            using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+            if (LastNotification == null) return;
             var notification = new Notification
             {
                 Title = LastNotification.Title,
@@ -164,7 +187,7 @@ namespace NotificationsModule.Services
                 DateTime = LastNotification.DateTime,
             };
             dbContext.Notifications.Add(notification);
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
         }
     }
 }

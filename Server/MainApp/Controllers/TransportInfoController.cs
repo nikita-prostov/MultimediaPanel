@@ -1,14 +1,13 @@
-﻿using JobModule.Data;
-using JobModule.Services;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using TransportInfoModule.Services;
 
 namespace MainApp.Controllers
 {
-    [Route("job")]
+    [Route("transport")]
     [ApiController]
-    public class JobController(JobService service) : ControllerBase
+    public class TransportInfoController(TransportInfoService service) : ControllerBase
     {
         [HttpGet("connect")]
         public async Task ConnectAsync(CancellationToken ct)
@@ -21,7 +20,7 @@ namespace MainApp.Controllers
             {
                 while (!ct.IsCancellationRequested)
                 {
-                    var state = service.CurrentJobInfo;
+                    var state = service.TransportInfo;
                     if (state != null)
                     {
                         var json = JsonSerializer.Serialize(state);
@@ -39,13 +38,6 @@ namespace MainApp.Controllers
             {
                 Console.WriteLine($"SSE error: {ex.Message}");
             }
-        }
-
-        [HttpGet("list")]
-        public IActionResult GetListAsync([FromServices] JobDbContext dbContext, [FromQuery] int page = 1)
-        {
-            var list = service.GetAll(dbContext,page);
-            return Ok(list);
         }
     }
 }

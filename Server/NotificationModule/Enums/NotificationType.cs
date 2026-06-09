@@ -10,6 +10,7 @@ namespace NotificationsModule.Enums
         Ferry,
         Fined,
         Tollgate,
-        Train
+        Train,
+        TruckWarnings
     }
 }
