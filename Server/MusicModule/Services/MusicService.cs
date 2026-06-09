@@ -16,7 +16,7 @@ namespace MusicModule.Services
     public sealed class MusicService
     {
         private readonly Player player;
-        private readonly MusicDbContext dbContext;
+        private readonly IServiceScopeFactory scopeFactory;
         private int current = 0;
         private bool isLocked = false;
         private readonly PlayerState state;
@@ -30,9 +30,9 @@ namespace MusicModule.Services
         private readonly string cachePathThumb;
         private readonly string accessToken;
 
-        public MusicService(MusicDbContext dbContext,string savePath, string cachePath,float initVolume, List<AudioTrack> tracks, VkApi? api = null, TracksSource source = TracksSource.MyMusic, string accessToken = "")
+        public MusicService(IServiceScopeFactory scopeFactory, string savePath, string cachePath,float initVolume, List<AudioTrack> tracks, VkApi? api = null, TracksSource source = TracksSource.MyMusic, string accessToken = "")
         {
-            this.dbContext = dbContext;
+            this.scopeFactory = scopeFactory;
             this.savePath = Path.Combine(savePath, "Musics");
             this.cachePath = Path.Combine(cachePath, "Musics");
             savePathThumb = Path.Combine(savePath, "Thumbs");
@@ -201,7 +201,8 @@ namespace MusicModule.Services
         public async Task DeleteAsync(long audioId, long ownerId)
         {
             if (vkApi == null) return;
-
+            using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<MusicDbContext>();
             var list = useShuffled ? shuffledTracks : tracks;
             var track = list.FirstOrDefault(t => t.Id == audioId);
             if (track == null) return;
@@ -217,6 +218,8 @@ namespace MusicModule.Services
 
         public async Task LoadAsync(TracksSource source, int page)
         {
+            using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<MusicDbContext>();
             if (state.Source != source)
             {
                 tracks.Clear();
@@ -227,7 +230,7 @@ namespace MusicModule.Services
                 state.Source = source;
             }
 
-            var newTracks = await TrackLoader.LoadAsync(source, vkApi, page);
+            var newTracks = await TrackLoader.LoadAsync(source, vkApi, dbContext, savePath, page);
 
             if (newTracks.Count == 0) return;
 
@@ -248,21 +251,31 @@ namespace MusicModule.Services
             }
         }
 
-        public async Task SaveAsync(AudioTrack audio)
+        private async Task SaveAsync(AudioTrack audio)
         {
             if (audio == null) return;
-            var music = new Music
+
+            using var scope = scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<MusicDbContext>();
+
+            var exists = await db.Musics
+                .AnyAsync(m => m.TrackId == audio.Id && m.OwnerId == audio.OwnerId);
+
+            if (!exists)
             {
-                TrackId = audio.Id,
-                OwnerId = audio.OwnerId,
-                Album = audio.Album,
-                AlbumId = audio.AlbumId,
-                Title = audio.Title,
-                Artist = audio.Artist,
-                Duration = audio.Duration,
-            };
-            dbContext.Add(music);
-            await dbContext.SaveChangesAsync();
+                var music = new Music 
+                {
+                    TrackId = audio.Id,
+                    OwnerId = audio.OwnerId,
+                    Album = audio.Album,
+                    AlbumId = audio.AlbumId,
+                    Title = audio.Title,
+                    Artist = audio.Artist,
+                    Duration = audio.Duration,
+                };
+                db.Add(music);
+                await db.SaveChangesAsync();
+            }
         }
 
         private void UpdateState()

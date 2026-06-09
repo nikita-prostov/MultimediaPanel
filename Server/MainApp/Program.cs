@@ -25,7 +25,7 @@ Console.Clear();
 Console.WriteLine("Change track source:");
 Console.WriteLine("1) My music");
 Console.WriteLine("2) Recomendations");
-Console.WriteLine("3) Local - don't work");
+Console.WriteLine("3) Local cache");
 var key = Console.ReadKey(true);
 var tracks = new List<AudioTrack>();
 string accessToken = "";
@@ -33,7 +33,16 @@ long userId;
 try
 {
     source = (TracksSource)int.Parse(key.KeyChar.ToString())-1;
-    if (source == TracksSource.MyMusic || source == TracksSource.Recomendations)
+    if (source == TracksSource.Local)
+    {
+        var tempOptions = new DbContextOptionsBuilder<MusicDbContext>()
+            .UseSqlite("Data Source=" + Path.Combine(path, "musicDb.db"))
+            .Options;
+        using var tempDb = new MusicDbContext(tempOptions);
+        tracks = await TrackLoader.LoadAsync(TracksSource.Local, dbContext: tempDb, path: path);
+        Console.WriteLine($"Загружено из кэша: {tracks.Count} треков");
+    }
+    else if (source == TracksSource.MyMusic || source == TracksSource.Recomendations)
     {
         
         Console.WriteLine("Authorization instruction:");
@@ -50,10 +59,10 @@ try
 
         tracks = await TrackLoader.LoadAsync(source, api);
     }
-    else if (source == TracksSource.Local)
+    else
     {
-        Console.WriteLine("This source is not yet available.");
-        await Task.Delay(3000);
+        Console.WriteLine("Unsupported source");
+        await Task.Delay(1000);
         goto start;
     }
 }
@@ -69,24 +78,33 @@ catch (Exception ex)
 
 var builder = WebApplication.CreateBuilder(args);
 
-var musicDbFilePath = Path.Combine(path, "musicDb.db");
-var musicDbOptions = new DbContextOptionsBuilder<MusicDbContext>();
-musicDbOptions.UseSqlite("Data Source=" + musicDbFilePath);
-var musicDbContext = new MusicDbContext(musicDbOptions.Options);
-
-var musicService = new MusicService(musicDbContext,path, cachePath, 0.1f, tracks,api,source,accessToken);
-builder.Services.AddSingleton(musicService);
-builder.Services.AddSingleton<SCSSdkTelemetry>();
-
 var notificationDbFilePath = Path.Combine(path, "notification.db");
 builder.Services.AddDbContext<NotificationDbContext>(options => options.UseSqlite("Data Source=" + notificationDbFilePath));
 
 var jobDbFilePath = Path.Combine(path, "jobHistory.db");
 builder.Services.AddDbContext<JobDbContext>(options => options.UseSqlite("Data Source=" + jobDbFilePath));
 
+var musicDbFilePath = Path.Combine(path, "musicDb.db");
+builder.Services.AddDbContext<MusicDbContext>(options => options.UseSqlite("Data Source=" + musicDbFilePath));
+
+builder.Services.AddSingleton<SCSSdkTelemetry>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<JobService>();
 builder.Services.AddSingleton<TransportInfoService>();
+builder.Services.AddSingleton<MusicService>(sp =>
+{
+    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
+    return new MusicService(
+        scopeFactory,
+        path,
+        cachePath,
+        0.1f,
+        tracks,
+        api,
+        source,
+        accessToken
+    );
+});
 
 builder.Services.AddControllers();
 
@@ -96,13 +114,17 @@ app.UseAuthorization();
 app.UseWebSockets();
 app.MapControllers();
 
-app.Run();
-
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
     await db.Database.MigrateAsync();
+    var db1 = scope.ServiceProvider.GetRequiredService<JobDbContext>();
+    await db1.Database.MigrateAsync();
+    var db2 = scope.ServiceProvider.GetRequiredService<MusicDbContext>();
+    await db2.Database.MigrateAsync();
 }
+
+app.Run();
 
 static (string? accessToken, long? userId) Parse(string url)
 {

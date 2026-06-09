@@ -14,7 +14,6 @@
     <ProjectReference Include="..\JobModule\JobModule.csproj" />
     <ProjectReference Include="..\MusicModule\MusicModule.csproj" />
     <ProjectReference Include="..\NotificationModule\NotificationsModule.csproj" />
-	  <ProjectReference Include="..\NotificationModule\TransportInfoModule.csproj" />
     <ProjectReference Include="..\SCSSdkClient\SCSSdkClient.csproj" />
     <ProjectReference Include="..\TruckInfoModule\TransportInfoModule.csproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
