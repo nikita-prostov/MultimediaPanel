@@ -33,7 +33,6 @@ namespace MainApp.Controllers
             }
             catch (TaskCanceledException)
             {
-                // Клиент отключился — это нормально
                 Console.WriteLine("SSE client disconnected");
             }
             catch (Exception ex)

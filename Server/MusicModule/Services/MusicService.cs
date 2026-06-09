@@ -10,7 +10,7 @@ using VkNet.Model;
 
 namespace MusicModule.Services
 {
-    public class MusicService
+    public sealed class MusicService
     {
         private readonly Player player;
         private int current = 0;

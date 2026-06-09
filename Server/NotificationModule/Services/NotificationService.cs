@@ -10,10 +10,10 @@ using System.Text;
 
 namespace NotificationsModule.Services
 {
-    public class NotificationService : IDisposable
+    public sealed class NotificationService : IDisposable
     {
-        private NotificationDbContext dbContext;
-        private SCSSdkTelemetry telemetry;
+        private readonly NotificationDbContext dbContext;
+        private readonly SCSSdkTelemetry telemetry;
         private SCSTelemetry data = new();
 
         public NotificationDto? LastNotification { get; set; }

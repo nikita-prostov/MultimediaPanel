@@ -1,3 +1,5 @@
+using JobModule.Data;
+using JobModule.Services;
 using Microsoft.EntityFrameworkCore;
 using MusicModule.Enums;
 using MusicModule.Loader;
@@ -72,7 +74,11 @@ builder.Services.AddSingleton<SCSSdkTelemetry>();
 var notificationDbFilePath = Path.Combine(path, "notification.db");
 builder.Services.AddDbContext<NotificationDbContext>(options => options.UseSqlite(notificationDbFilePath));
 
-builder.Services.AddScoped<NotificationService>();
+var jobDbFilePath = Path.Combine(path, "jobHistory.db");
+builder.Services.AddDbContext<JobDbContext>(options => options.UseSqlite(jobDbFilePath));
+
+builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddSingleton<JobService>();
 
 builder.Services.AddControllers();
 
