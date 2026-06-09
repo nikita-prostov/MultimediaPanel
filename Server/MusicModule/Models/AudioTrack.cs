@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using MusicModule.Data;
+using System.Text.Json.Serialization;
 using VkNet.Model;
 
 namespace MusicModule.Models
@@ -13,8 +14,6 @@ namespace MusicModule.Models
         public int Duration { get; set; }
         public string ThumbUrl { get; set; }
         public bool IsAdded { get; set; } = true;
-
-        [JsonIgnore]
         public long AlbumId { get; set; }
 
         [JsonIgnore]
@@ -49,6 +48,19 @@ namespace MusicModule.Models
             IsAdded = audio.OwnerId == userId;
             Duration = audio.Duration;
             AudioUrl = audio.Url.ToString();
+        }
+
+        public AudioTrack(Music music, string path) : this()
+        {
+            Id = music.TrackId;
+            Title = music.Title;
+            Artist = music.Artist;
+            Album = music.Album;
+            ThumbUrl = $"/music/thumb?albumId={music.AlbumId}";
+            OwnerId = music.OwnerId;
+            IsAdded = true;
+            Duration = music.Duration;
+            AudioUrl = $"file://{path}/{Id}_{OwnerId}.mp3";
         }
     }
 }

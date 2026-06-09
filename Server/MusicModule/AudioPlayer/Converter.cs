@@ -9,9 +9,9 @@ namespace MusicModule.AudioPlayer
 {
     public static class Converter
     {
-        public static async Task<string> ConvertAsync(string savePath, string url, string title, string artist)
+        public static async Task<string> ConvertAsync(string savePath, string url, long audioId, long ownerId)
         {
-            var fileName = $"{title.SanitizeFileName()} - {title.SanitizeFileName()}.mp3";
+            var fileName = $"{audioId}_{ownerId}.mp3";
             var file = Path.Combine(savePath, fileName);
 
             if (File.Exists(file) && new FileInfo(file).Length > 0)

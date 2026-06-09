@@ -1,4 +1,6 @@
-﻿using MusicModule.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using MusicModule.Data;
+using MusicModule.Enums;
 using MusicModule.Models;
 using System;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ namespace MusicModule.Loader
 {
     public static class TrackLoader
     {
-        public static async Task<List<AudioTrack>> LoadAsync(TracksSource source, VkApi? api = null, int page = 1)
+        public static async Task<List<AudioTrack>> LoadAsync(TracksSource source, VkApi? api = null, MusicDbContext? dbContext = null, string? path = null, int page = 1)
         {
             List<AudioTrack> tracks = [];
             switch (source)
@@ -34,7 +36,12 @@ namespace MusicModule.Loader
                     }
                 case TracksSource.Local:
                     {
-                        throw new NotImplementedException();
+                        ArgumentNullException.ThrowIfNull(dbContext);
+                        ArgumentNullException.ThrowIfNull(path);
+
+                        Console.WriteLine("Loading you tracks from recomendations...");
+                        tracks = await LoadFromLocalCacheAsync(dbContext,path, page);
+                        break;
                     }
             }
             Console.WriteLine("You tracks success loaded");
@@ -84,6 +91,14 @@ namespace MusicModule.Loader
                 res.Add(new(track,api.UserId.Value));
             }
             return res;
+        }
+        private static async Task<List<AudioTrack>> LoadFromLocalCacheAsync(MusicDbContext dbContext, string path, int page = 1)
+        {
+            return await dbContext.Musics
+                .Skip((page - 1)*100)
+                .Take(100)
+                .Select(m => new AudioTrack(m, path))
+                .ToListAsync();
         }
     }
 }

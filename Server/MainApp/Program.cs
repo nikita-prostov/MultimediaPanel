@@ -1,6 +1,7 @@
 using JobModule.Data;
 using JobModule.Services;
 using Microsoft.EntityFrameworkCore;
+using MusicModule.Data;
 using MusicModule.Enums;
 using MusicModule.Loader;
 using MusicModule.Models;
@@ -77,6 +78,9 @@ builder.Services.AddDbContext<NotificationDbContext>(options => options.UseSqlit
 
 var jobDbFilePath = Path.Combine(path, "jobHistory.db");
 builder.Services.AddDbContext<JobDbContext>(options => options.UseSqlite(jobDbFilePath));
+
+var musicDbFilePath = Path.Combine(path, "musicDb.db");
+builder.Services.AddDbContext<MusicDbContext>(options => options.UseSqlite(musicDbFilePath));
 
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<JobService>();

@@ -5,5 +5,6 @@
   <Project Path="MusicModule/MusicModule.csproj" />
   <Project Path="NotificationModule/NotificationsModule.csproj" />
   <Project Path="SCSSdkClient/SCSSdkClient.csproj" Id="b62f8e57-9d8c-4ea2-90e4-1f6b09dce468" />
+  <Project Path="TruckInfoModule/TransportInfoModule.csproj" Id="4230db99-86ed-4eb0-972c-be0af5b4a0a2" />
   <Project Path="Utils/Utils.csproj" />
 </Solution>

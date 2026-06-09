@@ -1,4 +1,7 @@
-﻿using MusicModule.AudioPlayer;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using MusicModule.AudioPlayer;
+using MusicModule.Data;
 using MusicModule.Enums;
 using MusicModule.Loader;
 using MusicModule.Models;
@@ -13,6 +16,7 @@ namespace MusicModule.Services
     public sealed class MusicService
     {
         private readonly Player player;
+        private readonly MusicDbContext dbContext;
         private int current = 0;
         private bool isLocked = false;
         private readonly PlayerState state;
@@ -26,8 +30,9 @@ namespace MusicModule.Services
         private readonly string cachePathThumb;
         private readonly string accessToken;
 
-        public MusicService(string savePath, string cachePath,float initVolume, List<AudioTrack> tracks, VkApi? api = null, TracksSource source = TracksSource.MyMusic, string accessToken = "")
+        public MusicService(MusicDbContext dbContext,string savePath, string cachePath,float initVolume, List<AudioTrack> tracks, VkApi? api = null, TracksSource source = TracksSource.MyMusic, string accessToken = "")
         {
+            this.dbContext = dbContext;
             this.savePath = Path.Combine(savePath, "Musics");
             this.cachePath = Path.Combine(cachePath, "Musics");
             savePathThumb = Path.Combine(savePath, "Thumbs");
@@ -69,11 +74,12 @@ namespace MusicModule.Services
                 isLocked = true;
                 var currentTrack = useShuffled ? shuffledTracks[current] : tracks[current];
                 await ImageLoader.LoadAsync(saveThumbTo, currentTrack.OriginalThumbUrl, currentTrack.AlbumId);
-                var file = await Converter.ConvertAsync(saveTo, currentTrack.AudioUrl, currentTrack.Title, currentTrack.Artist);
+                var file = await Converter.ConvertAsync(saveTo, currentTrack.AudioUrl, currentTrack.Id, currentTrack.OwnerId);
                 await player.PlayAsync(file);
                 state.Track = currentTrack;
                 state.Position = 0;
                 isLocked = false;
+                await SaveAsync(currentTrack);
             }
 
             if (player.IsPaused)
@@ -86,12 +92,13 @@ namespace MusicModule.Services
             {
                 isLocked = true;
                 var currentTrack = useShuffled ? shuffledTracks[current] : tracks[current];
-                var file = await Converter.ConvertAsync(saveTo, currentTrack.AudioUrl, currentTrack.Title, currentTrack.Artist);
+                var file = await Converter.ConvertAsync(saveTo, currentTrack.AudioUrl, currentTrack.Id, currentTrack.OwnerId);
                 await ImageLoader.LoadAsync(saveThumbTo, currentTrack.OriginalThumbUrl, currentTrack.AlbumId);
                 await player.PlayAsync(file);
                 state.Track = currentTrack;
                 state.Position = 0;
                 isLocked = false;
+                await SaveAsync(currentTrack);
             }
             UpdateState();
         }
@@ -179,8 +186,11 @@ namespace MusicModule.Services
             try
             {
                 var result = await vkApi.Audio.AddAsync(audioId, ownerId);
-                Console.WriteLine($"Audio {ownerId}_{audioId} success added");
                 track.IsAdded = true;
+                track.OwnerId = vkApi.UserId.Value;
+                track.Id = result;
+                await SaveAsync(track);
+                Console.WriteLine($"Audio {ownerId}_{audioId} success added");
             }
             catch (Exception ex)
             {
@@ -201,6 +211,7 @@ namespace MusicModule.Services
             {
                 Console.WriteLine($"Audio by Id: {audioId} success deleted");
                 track.IsAdded = false;
+                await dbContext.Musics.Where(m => m.TrackId == audioId && m.OwnerId == ownerId).ExecuteDeleteAsync();
             }
         }
 
@@ -235,6 +246,23 @@ namespace MusicModule.Services
                 }
                 shuffledTracks.AddRange(shuffledNewTracks);
             }
+        }
+
+        public async Task SaveAsync(AudioTrack audio)
+        {
+            if (audio == null) return;
+            var music = new Music
+            {
+                TrackId = audio.Id,
+                OwnerId = audio.OwnerId,
+                Album = audio.Album,
+                AlbumId = audio.AlbumId,
+                Title = audio.Title,
+                Artist = audio.Artist,
+                Duration = audio.Duration,
+            };
+            dbContext.Add(music);
+            await dbContext.SaveChangesAsync();
         }
 
         private void UpdateState()
