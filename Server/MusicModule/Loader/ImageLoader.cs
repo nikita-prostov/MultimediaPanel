@@ -6,14 +6,13 @@ namespace MusicModule.Loader
     public static class ImageLoader
     {
         private static readonly HttpClient _httpClient = new();
-        public static async Task<string> LoadAsync(string savePath, string thumbUrl, long albumId)
+        public static async Task LoadAsync(string savePath, string thumbUrl, long albumId)
         {
             if (string.IsNullOrEmpty(thumbUrl))
-                return null;
+                return;
 
             try
             {
-                // Исправляем URL, если он без схемы
                 if (thumbUrl.StartsWith("//"))
                     thumbUrl = "https:" + thumbUrl;
                 else if (!thumbUrl.StartsWith("http"))
@@ -23,7 +22,7 @@ namespace MusicModule.Loader
                 string filePath = Path.Combine(savePath, $"album_{albumId}{extension}");
 
                 if (File.Exists(filePath) && new FileInfo(filePath).Length > 0)
-                    return filePath;
+                    return;
 
                 Directory.CreateDirectory(savePath);
 
@@ -34,12 +33,12 @@ namespace MusicModule.Loader
                 await using var fileStream = File.Create(filePath);
                 await stream.CopyToAsync(fileStream);
 
-                return filePath;
+                return;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Ошибка загрузки изображения: {ex.Message}");
-                return null;
+                return;
             }
         }
 

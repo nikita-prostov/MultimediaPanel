@@ -68,7 +68,7 @@ namespace MusicModule.Services
                 current = pos;
                 isLocked = true;
                 var currentTrack = useShuffled ? shuffledTracks[current] : tracks[current];
-                var imagefile = await ImageLoader.LoadAsync(saveThumbTo, currentTrack.OriginalThumbUrl, currentTrack.AlbumId);
+                await ImageLoader.LoadAsync(saveThumbTo, currentTrack.OriginalThumbUrl, currentTrack.AlbumId);
                 var file = await Converter.ConvertAsync(saveTo, currentTrack.AudioUrl, currentTrack.Title, currentTrack.Artist);
                 await player.PlayAsync(file);
                 state.Track = currentTrack;
@@ -87,7 +87,7 @@ namespace MusicModule.Services
                 isLocked = true;
                 var currentTrack = useShuffled ? shuffledTracks[current] : tracks[current];
                 var file = await Converter.ConvertAsync(saveTo, currentTrack.AudioUrl, currentTrack.Title, currentTrack.Artist);
-                var imagefile = await ImageLoader.LoadAsync(saveThumbTo, currentTrack.OriginalThumbUrl, currentTrack.AlbumId);
+                await ImageLoader.LoadAsync(saveThumbTo, currentTrack.OriginalThumbUrl, currentTrack.AlbumId);
                 await player.PlayAsync(file);
                 state.Track = currentTrack;
                 state.Position = 0;
