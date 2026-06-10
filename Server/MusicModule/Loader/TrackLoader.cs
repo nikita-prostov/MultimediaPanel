@@ -27,7 +27,7 @@ namespace MusicModule.Loader
                         tracks = await LoadMyMusicAsync(api);
                         break;
                     }
-                case TracksSource.Recomendations:
+                case TracksSource.Recommendations:
                     {
                         ArgumentNullException.ThrowIfNull(api);
 

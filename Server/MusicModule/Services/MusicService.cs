@@ -81,8 +81,8 @@ namespace MusicModule.Services
         {
             if (isLocked) return;
 
-            string saveTo = state.Source == TracksSource.Recomendations ? Path.Combine(cachePath, "Recomendations") : savePath;
-            string saveThumbTo = state.Source == TracksSource.Recomendations ? Path.Combine(cachePathThumb, "Recomendations") : savePathThumb;
+            string saveTo = state.Source == TracksSource.Recommendations ? Path.Combine(cachePath, "Recomendations") : savePath;
+            string saveThumbTo = state.Source == TracksSource.Recommendations ? Path.Combine(cachePathThumb, "Recomendations") : savePathThumb;
             if (pos >= 0 && pos != current)
             {
                 current = pos;
@@ -146,7 +146,7 @@ namespace MusicModule.Services
         {
             if (state.Source == source) return;
 
-            if (source == TracksSource.MyMusic || source == TracksSource.Recomendations && vkApi == null) return;
+            if (source == TracksSource.MyMusic || source == TracksSource.Recommendations && vkApi == null) return;
 
             tracks.Clear();
             tracks.AddRange(await TrackLoader.LoadAsync(source, vkApi));
@@ -220,7 +220,7 @@ namespace MusicModule.Services
 
         public async Task<(byte[]?,string?)> GetThumbAsync(long albumId)
         {
-            string saveThumbTo = state.Source == TracksSource.Recomendations ? cachePathThumb : savePathThumb;
+            string saveThumbTo = state.Source == TracksSource.Recommendations ? cachePathThumb : savePathThumb;
             return await ImageLoader.GetImageAsync(saveThumbTo, albumId);
         }
 

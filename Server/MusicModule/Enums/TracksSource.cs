@@ -7,7 +7,7 @@ namespace MusicModule.Enums
     public enum TracksSource
     {
         MyMusic,
-        Recomendations,
+        Recommendations,
         Local
     }
 }
