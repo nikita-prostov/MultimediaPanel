@@ -46,17 +46,17 @@ namespace MainApp.Controllers
         }
 
         [HttpGet("list/all")]
-        public async Task<IActionResult> GetListAsync([FromServices]NotificationDbContext dbContext, [FromQuery] int page = 1)
+        public async Task<IActionResult> GetListAsync([FromQuery] int page = 1)
         {
             if(page <= 0) page = 1;
-            return Ok(await service.GetListAsync(dbContext, page));
+            return Ok(await service.GetListAsync(page));
         }
 
         [HttpGet("list/filtered")]
-        public async Task<IActionResult> GetFilteredListAsync([FromServices] NotificationDbContext dbContext, [FromQuery] int page = 1, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null,[FromQuery] NotificationType type = NotificationType.None, [FromQuery] string? title = null)
+        public async Task<IActionResult> GetFilteredListAsync([FromQuery] int page = 1, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null,[FromQuery] NotificationType type = NotificationType.None, [FromQuery] string? title = null)
         {
             if (page <= 0) page = 1;
-            return Ok(await service.GetFilteredListAsync(dbContext,page, from,to, type, title));
+            return Ok(await service.GetFilteredListAsync(page, from,to, type, title));
         }
     }
 }

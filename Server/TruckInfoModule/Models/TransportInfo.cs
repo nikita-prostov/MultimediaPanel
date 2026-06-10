@@ -7,9 +7,9 @@ namespace TransportInfoModule.Models
 {
     public class TransportInfo
     {
-        public TrailerDamage TrailerDamage { get; set; } = new();
+        public TrailerDamage? TrailerDamage { get; set; } = null;
         public TruckDamage TruckDamage { get; set; } = new();
         public FuelInfo FuelInfo { get; set; } = new();
-        public WarningsInfo Warnings { get; set; } = new();
+        public List<ErrorDto> Errors { get; set; } = new();
     }
 }

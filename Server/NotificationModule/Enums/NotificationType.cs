@@ -11,6 +11,10 @@ namespace NotificationsModule.Enums
         Fined,
         Tollgate,
         Train,
-        TruckWarnings
+        TruckWarnings,
+        EngineWarning,
+        EngineCritical,
+        TransmissionWarning,
+        TransmissionCritical
     }
 }

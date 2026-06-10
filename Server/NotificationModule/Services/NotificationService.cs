@@ -16,7 +16,6 @@ namespace NotificationsModule.Services
         private readonly IServiceScopeFactory scopeFactory;
         private readonly SCSSdkTelemetry telemetry;
         private SCSTelemetry data = new();
-
         public NotificationDto? LastNotification { get; set; }
 
         public NotificationService(IServiceScopeFactory scopeFactory, SCSSdkTelemetry telemetry)
@@ -26,8 +25,10 @@ namespace NotificationsModule.Services
             this.telemetry.Data += OnDataChanged;
         }
 
-        public async Task<List<NotificationDto>> GetListAsync(NotificationDbContext dbContext, int page)
+        public async Task<List<NotificationDto>> GetListAsync(int page)
         {
+            using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
             return await dbContext.Notifications
                 .OrderByDescending(n => n.DateTime)
                 .Skip((page - 1) * 100)
@@ -45,11 +46,14 @@ namespace NotificationsModule.Services
                 .ToListAsync();
         }
 
-        public async Task<List<NotificationDto>> GetFilteredListAsync(NotificationDbContext dbContext,int page,DateTime? from = null, DateTime? to = null,NotificationType? type = null, string? title = null)
+        public async Task<List<NotificationDto>> GetFilteredListAsync(int page,DateTime? from = null, DateTime? to = null,NotificationType? type = null, string? title = null)
         {
             from ??= DateTime.MinValue;
             to ??= data.CommonValues.GameTime.Date;
             type ??= NotificationType.None;
+
+            using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
 
             return await dbContext.Notifications
                 .OrderByDescending(n => n.DateTime)
@@ -78,8 +82,8 @@ namespace NotificationsModule.Services
         {
             LastNotification = new()
             {
-                Title = "Пункт оплаты",
-                SubTitle = "Проезд оплачен",
+                Title = "Оплата проезда",
+                SubTitle = "Платная дорога",
                 Amount = data.GamePlay.TollgateEvent.PayAmount,
                 Type = NotificationType.Tollgate,
                 DateTime = data.CommonValues.GameTime.Date
@@ -91,8 +95,8 @@ namespace NotificationsModule.Services
         {
             LastNotification = new()
             {
-                Title = "Паром",
-                SubTitle = "Переправа из: " + data.GamePlay.FerryEvent.SourceName + " в: " + data.GamePlay.FerryEvent.TargetName,
+                Title = "Паромная переправа",
+                SubTitle = $"Маршрут: {data.GamePlay.FerryEvent.SourceName} → {data.GamePlay.FerryEvent.TargetName}",
                 Amount = data.GamePlay.FerryEvent.PayAmount,
                 Type = NotificationType.Ferry,
                 DateTime = data.CommonValues.GameTime.Date
@@ -104,8 +108,8 @@ namespace NotificationsModule.Services
         {
             LastNotification = new()
             {
-                Title = "Поезд",
-                SubTitle = "Переезд из: " + data.GamePlay.TrainEvent.SourceName + " в: " + data.GamePlay.TrainEvent.TargetName,
+                Title = "Железнодорожная перевозка",
+                SubTitle = $"Маршрут: {data.GamePlay.TrainEvent.SourceName} → {data.GamePlay.TrainEvent.TargetName}",
                 Amount = data.GamePlay.TrainEvent.PayAmount,
                 Type = NotificationType.Train,
                 DateTime = data.CommonValues.GameTime.Date
@@ -117,23 +121,10 @@ namespace NotificationsModule.Services
         {
             LastNotification = new()
             {
-                Title = "Нарушение",
+                Title = "Штраф",
                 SubTitle = GetOffenceDescription(data.GamePlay.FinedEvent.Offence),
                 Amount = data.GamePlay.FinedEvent.Amount,
                 Type = NotificationType.Fined,
-                DateTime = data.CommonValues.GameTime.Date
-            };
-            Save();
-        }
-
-        private void OnTruckWarning(string subtitle)
-        {
-            LastNotification = new()
-            {
-                Title = "Предупреждение системы",
-                SubTitle = subtitle,
-                Amount = -1,
-                Type = NotificationType.TruckWarnings,
                 DateTime = data.CommonValues.GameTime.Date
             };
             Save();
@@ -159,18 +150,10 @@ namespace NotificationsModule.Services
         private void OnDataChanged(SCSTelemetry data, bool newTimestamp)
         {
             this.data = data;
-            var warnings = data.TruckValues.CurrentValues.DashboardValues.WarningValues;
             if (data.SpecialEventsValues.Tollgate) OnTollgate();
             if (data.SpecialEventsValues.Ferry) OnFerry();
             if (data.SpecialEventsValues.Train) OnTrain();
             if (data.SpecialEventsValues.Fined) OnFined();
-            if (warnings.WaterTemperature) OnTruckWarning("Перегрев двигателя: температура охлаждающей жидкости превышает допустимое значение");
-            if (warnings.OilPressure) OnTruckWarning("Падение давления моторного масла ниже критической отметки");
-            if (warnings.AirPressure) OnTruckWarning("Недостаточное давление воздуха в тормозной системе");
-            if (warnings.AirPressureEmergency) OnTruckWarning("Аварийное падение давления воздуха. Торможение может быть неэффективным");
-            if (warnings.FuelW) OnTruckWarning("Минимальный остаток топлива. Требуется дозаправка");
-            if (warnings.AdBlue) OnTruckWarning("Критически низкий уровень реагента AdBlue");
-            if (warnings.BatteryVoltage) OnTruckWarning("Напряжение аккумуляторной батареи ниже номинального значения");
         }
 
         private async void Save()

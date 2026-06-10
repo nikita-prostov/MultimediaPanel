@@ -39,5 +39,11 @@ namespace MainApp.Controllers
                 Console.WriteLine($"SSE error: {ex.Message}");
             }
         }
+
+        [HttpGet("logs")]
+        public async Task<IActionResult> GetLogsAsync([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null, [FromQuery] bool activeOnly = false)
+        {
+            return Ok(service.GetFullLogs(to, from, activeOnly));
+        }
     }
 }
