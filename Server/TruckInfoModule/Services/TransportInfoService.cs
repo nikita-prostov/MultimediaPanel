@@ -8,6 +8,7 @@ using System.Text;
 using TransportInfoModule.Constants;
 using TransportInfoModule.Data;
 using TransportInfoModule.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TransportInfoModule.Services
 {
@@ -59,14 +60,44 @@ namespace TransportInfoModule.Services
         {
             LicensePlate = data.TruckValues.ConstantsValues.LicensePlate;
 
-            var fuelInfo = data.TruckValues.CurrentValues.DashboardValues.FuelValue;
+            if (data.TruckValues.CurrentValues.DashboardValues.RPM > 100)
+            {
+                WriteFuelInfo(data.TruckValues);
+                WriteTransportDamage(data.TruckValues.CurrentValues, data.TrailerValues);
+                WriteActiveErrors(
+                    data.TruckValues.CurrentValues,
+                    data.TruckValues.ConstantsValues,
+                    data.CommonValues.GameTime.Date
+                    );
+
+                try
+                {
+                    UpdateLogs(data.CommonValues.GameTime.Date);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message.ToString());
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine(ex.InnerException.Message.ToString());
+                    }
+                }
+            }
+        }
+
+        private void WriteFuelInfo(SCSTelemetry.Truck truck)
+        {
+            var fuelInfo = truck.CurrentValues.DashboardValues.FuelValue;
             TransportInfo.FuelInfo.Current = fuelInfo.Amount;
-            TransportInfo.FuelInfo.Max = data.TruckValues.ConstantsValues.CapacityValues.Fuel;
+            TransportInfo.FuelInfo.Max = truck.ConstantsValues.CapacityValues.Fuel;
             TransportInfo.FuelInfo.AverageConsumption = fuelInfo.AverageConsumption * 100;
             TransportInfo.FuelInfo.Range = fuelInfo.Range;
+        }
 
-            var truckDamage = data.TruckValues.CurrentValues.DamageValues;
-            var warnings = data.TruckValues.CurrentValues.DashboardValues.WarningValues;
+        private void WriteTransportDamage(SCSTelemetry.Truck.Current truck, SCSTelemetry.Trailer[] trailers)
+        {
+            var truckDamage = truck.DamageValues;
+            var warnings = truck.DashboardValues.WarningValues;
 
             TransportInfo.TruckDamage.Cabin = (int)(truckDamage.Cabin * 100);
             TransportInfo.TruckDamage.Chassis = (int)(truckDamage.Chassis * 100);
@@ -75,9 +106,9 @@ namespace TransportInfoModule.Services
             TransportInfo.TruckDamage.WheelsAvg = (int)(truckDamage.WheelsAvg * 100);
             TransportInfo.TruckDamage.Average = (int)(((truckDamage.Cabin + truckDamage.Chassis + truckDamage.Transmission + truckDamage.Engine + truckDamage.WheelsAvg) / 5) * 100);
 
-            if(data.TrailerValues.Length > 0)
+            if (trailers.Length > 0)
             {
-                var trailerDamage = data.TrailerValues[0].DamageValues;
+                var trailerDamage = trailers[0].DamageValues;
                 TransportInfo.TrailerDamage = new()
                 {
                     Body = (int)(trailerDamage.Body * 100),
@@ -90,11 +121,6 @@ namespace TransportInfoModule.Services
             {
                 TransportInfo.TrailerDamage = null;
             }
-            WriteActiveErrors(
-                data.TruckValues.CurrentValues,
-                data.TruckValues.ConstantsValues,
-                data.CommonValues.GameTime.Date
-                );
         }
 
         private void WriteActiveErrors(SCSTelemetry.Truck.Current current, SCSTelemetry.Truck.Constants constants, DateTime dateTime)
@@ -105,15 +131,13 @@ namespace TransportInfoModule.Services
             var damage = current.DamageValues;
             var fuel = dashboard.FuelValue;
 
-            // Топливо — меньше 10% от максимума? (макс можно взять из констант)
-            if (fuel.Amount < constants.WarningFactorValues.Fuel)  // Например, меньше 50 литров
+            if (fuel.Amount < constants.WarningFactorValues.Fuel) 
                 TransportInfo.Errors.Add(new() { 
                     Code = ErrorCodes.FuelLow, 
                     DateTime = dateTime,
                     Description = ErrorCodes.GetDescription(ErrorCodes.FuelLow)
                 });
 
-            // AdBlue — меньше 10 литров?
             if (dashboard.AdBlue < constants.WarningFactorValues.AdBlue)
                 TransportInfo.Errors.Add(new() { 
                     Code = ErrorCodes.AdBlueLow,
@@ -121,7 +145,6 @@ namespace TransportInfoModule.Services
                     Description = ErrorCodes.GetDescription(ErrorCodes.AdBlueLow)
                 });
 
-            // Давление воздуха — меньше 8 bar? (или psi из SDK)
             if (current.MotorValues.BrakeValues.AirPressure < constants.WarningFactorValues.AirPressure)  // psi
                 TransportInfo.Errors.Add(new() { 
                     Code = ErrorCodes.AirPressureLow,
@@ -136,7 +159,6 @@ namespace TransportInfoModule.Services
                     Description = ErrorCodes.GetDescription(ErrorCodes.AirPressureEmergency)
                 });
 
-            // Давление масла — меньше 10 psi?
             if (dashboard.OilPressure < constants.WarningFactorValues.OilPressure)
                 TransportInfo.Errors.Add(new() {
                     Code = ErrorCodes.EngineOilPressureLow,
@@ -144,7 +166,6 @@ namespace TransportInfoModule.Services
                     Description = ErrorCodes.GetDescription(ErrorCodes.EngineOilPressureLow)
                 });
 
-            // Температура воды
             if (dashboard.WaterTemperature > (constants.WarningFactorValues.WaterTemperature + 15))
                 TransportInfo.Errors.Add(new() {
                     Code = ErrorCodes.EngineCoolantTemperatureCritical,
@@ -158,7 +179,6 @@ namespace TransportInfoModule.Services
                     Description = ErrorCodes.GetDescription(ErrorCodes.EngineCoolantTemperatureWarning)
                 });
 
-            // Температура масла
             if (dashboard.OilTemperature > 140f)
                 TransportInfo.Errors.Add(new() { 
                     Code = ErrorCodes.EngineOilTemperatureCritical,
@@ -172,7 +192,6 @@ namespace TransportInfoModule.Services
                     Description = ErrorCodes.GetDescription(ErrorCodes.EngineOilTemperatureWarning)
                 });
 
-            // Напряжение АКБ — ниже 12V?
             if (dashboard.BatteryVoltage < constants.WarningFactorValues.BatteryVoltage)
                 TransportInfo.Errors.Add(new() {
                     Code = ErrorCodes.BatteryVoltageLow,
@@ -187,7 +206,6 @@ namespace TransportInfoModule.Services
                     Description = ErrorCodes.GetDescription(ErrorCodes.BatteryVoltageHigh)
                 });
 
-            // Повреждения
             if (damage.Engine > 0.3f)
                 TransportInfo.Errors.Add(new() { 
                     Code = ErrorCodes.EngineCritical,
@@ -213,19 +231,6 @@ namespace TransportInfoModule.Services
                     DateTime = dateTime,
                     Description = ErrorCodes.GetDescription(ErrorCodes.TransmissionWarning)
                 });
-
-            try
-            {
-                UpdateLogs(dateTime);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message.ToString());
-                if(ex.InnerException != null)
-                {
-                    Console.WriteLine(ex.InnerException.Message.ToString());
-                }
-            }
         }
 
         private async void UpdateLogs(DateTime dateTime)
