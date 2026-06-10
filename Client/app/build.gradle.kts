@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.nks.interactive.multimediapanel.client"
+        applicationId = "com.nks.interactive.multimediapanel"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
