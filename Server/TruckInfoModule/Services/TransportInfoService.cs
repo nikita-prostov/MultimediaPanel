@@ -17,7 +17,7 @@ namespace TransportInfoModule.Services
         private readonly SCSSdkTelemetry telemetry;
         private readonly IServiceScopeFactory scopeFactory;
 
-        public TransportInfo TransportInfo { get; private set; } = new();
+        public TransportInfo? TransportInfo { get; private set; } = null;
 
         public string LicensePlate;
 
@@ -62,6 +62,7 @@ namespace TransportInfoModule.Services
 
             if (data.TruckValues.CurrentValues.DashboardValues.RPM > 100)
             {
+                TransportInfo = new();
                 WriteFuelInfo(data.TruckValues);
                 WriteTransportDamage(data.TruckValues.CurrentValues, data.TrailerValues);
                 WriteActiveErrors(
@@ -83,8 +84,13 @@ namespace TransportInfoModule.Services
                     }
                 }
             }
+            else
+            {
+                TransportInfo = null;
+            }
         }
 
+#pragma warning disable
         private void WriteFuelInfo(SCSTelemetry.Truck truck)
         {
             var fuelInfo = truck.CurrentValues.DashboardValues.FuelValue;
@@ -232,7 +238,7 @@ namespace TransportInfoModule.Services
                     Description = ErrorCodes.GetDescription(ErrorCodes.TransmissionWarning)
                 });
         }
-
+#pragma warning enable
         private async void UpdateLogs(DateTime dateTime)
         {
             using var scope = scopeFactory.CreateScope();
