@@ -1,7 +1,7 @@
-package com.nks.interactive.multimediapanel.api.music
+package com.nks.interactive.multimediapanel.api.notification
 
 import com.google.gson.Gson
-import com.nks.interactive.multimediapanel.models.music.PlayerState
+import com.nks.interactive.multimediapanel.models.notification.NotificationDto
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -12,18 +12,18 @@ import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 
-class MusicSseClient(private val apiUrl: String) {
+class NotificationSseClient(private val apiUrl: String) {
     private val client = OkHttpClient()
     private var eventSource: EventSource? = null
 
-    val playerState: Flow<PlayerState> = callbackFlow {
-        val url = "$apiUrl/music/connect"
+    val notification: Flow<NotificationDto?> = callbackFlow {
+        val url = "$apiUrl/notifications/subscribe"
         val request = Request.Builder().url(url).build()
 
         val listener = object : EventSourceListener() {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 try {
-                    val state = Gson().fromJson(data, PlayerState::class.java)
+                    val state = Gson().fromJson(data, NotificationDto::class.java)
                     trySend(state)
                 } catch (e: Exception) {
                 }

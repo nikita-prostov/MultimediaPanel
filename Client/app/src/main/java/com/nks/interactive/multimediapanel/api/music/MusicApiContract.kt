@@ -1,9 +1,9 @@
 package com.nks.interactive.multimediapanel.api.music
 
-import com.nks.interactive.multimediapanel.models.AudioTrack
-import com.nks.interactive.multimediapanel.models.GetListResponse
-import com.nks.interactive.multimediapanel.models.RepeatMode
-import com.nks.interactive.multimediapanel.models.TracksSource
+import com.nks.interactive.multimediapanel.models.music.AudioTrack
+import com.nks.interactive.multimediapanel.models.music.GetListResponse
+import com.nks.interactive.multimediapanel.models.music.RepeatMode
+import com.nks.interactive.multimediapanel.models.music.TracksSource
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.DELETE

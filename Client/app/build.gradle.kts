@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.nks.interactive.multimediapanel.client"
+    namespace = "com.nks.interactive.multimediapanel"
     compileSdk {
         version = release(36)
     }

@@ -1,4 +1,4 @@
-package com.nks.interactive.multimediapanel.models
+package com.nks.interactive.multimediapanel.models.music
 
 data class PlayerState(
     val position: Int,
