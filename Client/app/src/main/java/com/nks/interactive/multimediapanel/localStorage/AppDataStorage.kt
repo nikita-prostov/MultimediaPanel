@@ -18,6 +18,10 @@ class AppDataStorage(context: Context) {
         get() = prefs.getString("port","") ?: ""
         set(value) = prefs.edit { putString("port", value) }
 
+    var fullBaseUrl =
+        if (port.isEmpty()) "http://$ipAddress/"
+        else "http://$ipAddress:$port/"
+
     var wallpaperId: Int
         get() = prefs.getInt("wallpaperId",R.drawable.wallpaper1)
         set(value) = prefs.edit { putInt("wallpaperId",value) }

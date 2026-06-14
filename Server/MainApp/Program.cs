@@ -9,6 +9,8 @@ using MusicModule.Services;
 using NotificationsModule.Data;
 using NotificationsModule.Services;
 using SCSSdkClient;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Web;
 using TransportInfoModule.Services;
 using VkNet;
@@ -42,7 +44,7 @@ try
         tracks = await TrackLoader.LoadAsync(TracksSource.Local, dbContext: tempDb, path: path);
         Console.WriteLine($"Загружено из кэша: {tracks.Count} треков");
     }
-    else if (source == TracksSource.MyMusic || source == TracksSource.Recomendations)
+    else if (source == TracksSource.MyMusic || source == TracksSource.Recommendations)
     {
         
         Console.WriteLine("Authorization instruction:");
@@ -106,7 +108,20 @@ builder.Services.AddSingleton<MusicService>(sp =>
     );
 });
 
-builder.Services.AddControllers();
+builder.Services.AddScoped(s =>
+{
+    return new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter() }
+    };
+});
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+});
+
 
 var app = builder.Build();
 
@@ -124,7 +139,7 @@ using (var scope = app.Services.CreateScope())
     await db2.Database.MigrateAsync();
 }
 
-app.Run();
+app.Run("http://0.0.0.0:5110");
 
 static (string? accessToken, long? userId) Parse(string url)
 {

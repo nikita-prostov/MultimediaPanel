@@ -8,7 +8,7 @@ namespace MainApp.Controllers
 {
     [ApiController]
     [Route("music")]
-    public class MusicController(MusicService service) : ControllerBase
+    public class MusicController(MusicService service, JsonSerializerOptions serializerOptions) : ControllerBase
     {
         [HttpGet("connect")]
         public async Task ConnectAsync(CancellationToken ct)
@@ -16,7 +16,7 @@ namespace MainApp.Controllers
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");
             Response.Headers.Append("Connection", "keep-alive");
-
+            Console.WriteLine("SSE client connected");
             try
             {
                 while (!ct.IsCancellationRequested)
@@ -24,8 +24,8 @@ namespace MainApp.Controllers
                     var state = service.State;
                     if (state != null)
                     {
-                        var json = JsonSerializer.Serialize(state);
-                        await Response.WriteAsync(json, ct);
+                        var json = JsonSerializer.Serialize(state, serializerOptions);
+                        await Response.WriteAsync($"data: {json}\n\n", ct);
                         await Response.Body.FlushAsync(ct);
                     }
                     await Task.Delay(1000, ct);

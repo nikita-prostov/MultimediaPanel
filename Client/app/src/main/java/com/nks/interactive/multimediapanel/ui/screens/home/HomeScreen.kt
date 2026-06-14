@@ -18,6 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,8 +31,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.nks.interactive.multimediapanel.R
+import com.nks.interactive.multimediapanel.api.ServerClient
+import com.nks.interactive.multimediapanel.api.music.MusicSseClient
 import com.nks.interactive.multimediapanel.localStorage.AppDataStorage
 import com.nks.interactive.multimediapanel.ui.components.Clock
+import com.nks.interactive.multimediapanel.ui.components.SmallMusicPlayer
+import com.nks.interactive.multimediapanel.viewModel.HomeScreenVM
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -35,9 +45,22 @@ import java.time.LocalTime
 @Composable
 fun HomeScreen() {
     val appSetting = koinInject<AppDataStorage>()
+    val vm = koinViewModel<HomeScreenVM>()
+    val playerState by vm.playerState
+
     val realDateTime = LocalDateTime.now()
     val gameDateTime = LocalDateTime.of(2026,1,12,12,5)
     val nextRestStopAfter = LocalTime.of(8,30)
+
+    LaunchedEffect(Unit) {
+        vm.connect()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            vm.disconnect()
+        }
+    }
 
     Box{
         Image(
@@ -47,7 +70,9 @@ fun HomeScreen() {
             modifier = Modifier.fillMaxSize()
         )
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(Modifier
+                .fillMaxWidth()
+                .padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Clock(realDateTime)
                 Clock(gameDateTime)
             }
@@ -80,7 +105,9 @@ fun HomeScreen() {
                     Icon(
                         painterResource(R.drawable.hotel),
                         null,
-                        Modifier.width(26.dp).height(26.dp),
+                        Modifier
+                            .width(26.dp)
+                            .height(26.dp),
                         tint = contentColor
                     )
                     Spacer(Modifier.width(8.dp))
@@ -96,7 +123,22 @@ fun HomeScreen() {
                     )
                 }
             }
+            Spacer(Modifier.weight(1f))
+            playerState?.let {
+                SmallMusicPlayer(
+                    playerState = it,
+                    baseUrl = appSetting.fullBaseUrl,
+                    onPlayClicked = {vm.play()},
+                    onPauseClicked = {vm.pause()},
+                    onPlayNextClicked = {vm.next()},
+                    onPlayPrevClicked = {vm.prev()},
+                    onAddClicked = {vm.add()},
+                    onRemoveClicked = {vm.delete()},
+                    onShuffleClicked = {vm.shuffle()},
+                    onSortClicked = {vm.sort()},
+                    onRepeatModeChanged = {it -> vm.setRepeatMode(it)}
+                )
+            }
         }
     }
-
 }
