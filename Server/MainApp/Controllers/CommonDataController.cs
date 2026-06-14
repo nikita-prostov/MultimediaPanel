@@ -7,7 +7,7 @@ namespace MainApp.Controllers
 {
     [Route("common")]
     [ApiController]
-    public class CommonDataController(CommonDataService service) : ControllerBase
+    public class CommonDataController(CommonDataService service, JsonSerializerOptions serializerOptions) : ControllerBase
     {
         [HttpGet("connect")]
         public async Task ConnectAsync(CancellationToken ct)
@@ -23,8 +23,8 @@ namespace MainApp.Controllers
                     var state = service.CommonData;
                     if (state != null)
                     {
-                        var json = JsonSerializer.Serialize(state);
-                        await Response.WriteAsync(json, ct);
+                        var json = JsonSerializer.Serialize(state, serializerOptions);
+                        await Response.WriteAsync($"data: {json}\n\n", ct);
                         await Response.Body.FlushAsync(ct);
                     }
                     await Task.Delay(1000, ct);

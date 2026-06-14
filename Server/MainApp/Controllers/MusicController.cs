@@ -16,7 +16,6 @@ namespace MainApp.Controllers
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");
             Response.Headers.Append("Connection", "keep-alive");
-            Console.WriteLine("SSE client connected");
             try
             {
                 while (!ct.IsCancellationRequested)

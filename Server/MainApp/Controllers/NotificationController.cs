@@ -10,7 +10,7 @@ namespace MainApp.Controllers
 {
     [Route("notifications")]
     [ApiController]
-    public class NotificationController(NotificationService service) : ControllerBase
+    public class NotificationController(NotificationService service, JsonSerializerOptions serializerOptions) : ControllerBase
     {
         NotificationDto? lastSentNotification;
         [HttpGet("subscribe")]
@@ -28,8 +28,8 @@ namespace MainApp.Controllers
                     if (lastNotification != null && lastNotification != lastSentNotification)
                     {
                         lastSentNotification = lastNotification;
-                        var json = JsonSerializer.Serialize(lastNotification);
-                        await Response.WriteAsync(json, ct);
+                        var json = JsonSerializer.Serialize(lastNotification, serializerOptions);
+                        await Response.WriteAsync($"data: {json}\n\n", ct);
                         await Response.Body.FlushAsync(ct);
                     }
                     await Task.Delay(1000, ct);
