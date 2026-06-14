@@ -22,6 +22,7 @@ import com.nks.interactive.multimediapanel.R
 import com.nks.interactive.multimediapanel.ui.components.MenuItem
 import com.nks.interactive.multimediapanel.ui.components.VerticalMenu
 import com.nks.interactive.multimediapanel.ui.screens.home.HomeScreen
+import com.nks.interactive.multimediapanel.ui.screens.musicPlayer.MusicPlayerScreen
 import com.nks.interactive.multimediapanel.ui.screens.settings.SettingsScreen
 
 @Composable
@@ -40,6 +41,7 @@ fun MainScreen(modifier: Modifier){
         Box(Modifier.fillMaxSize(1f).padding(start = 64.dp)){
             when(currentScreen){
                 0 -> HomeScreen()
+                1 -> MusicPlayerScreen()
                 5 -> SettingsScreen()
             }
         }
