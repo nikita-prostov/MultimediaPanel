@@ -54,18 +54,19 @@ fun PopupNotification(title: String, subTitle: String, type: NotificationType = 
     ) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                if (type != NotificationType.Default) {
-                    Icon(
-                        painter = painterResource(
-                            if (type == NotificationType.Warning) R.drawable.warning
-                            else R.drawable.critical
-                        ),
-                        modifier = Modifier.width(32.dp).height(32.dp),
-                        contentDescription = null,
-                        tint = iconTint
-                    )
-                    Spacer(Modifier.width(12.dp))
-                }
+                Icon(
+                    painter = painterResource(
+                        when (type) {
+                            NotificationType.Warning -> R.drawable.warning
+                            NotificationType.Default -> R.drawable.info
+                            else -> R.drawable.critical
+                        }
+                    ),
+                    modifier = Modifier.width(32.dp).height(32.dp),
+                    contentDescription = null,
+                    tint = iconTint
+                )
+                Spacer(Modifier.width(12.dp))
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,

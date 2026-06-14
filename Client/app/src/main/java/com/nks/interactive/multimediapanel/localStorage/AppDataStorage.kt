@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.nks.interactive.multimediapanel.R
 
 class AppDataStorage(context: Context) {
 
@@ -16,4 +17,8 @@ class AppDataStorage(context: Context) {
     var port: String
         get() = prefs.getString("port","") ?: ""
         set(value) = prefs.edit { putString("port", value) }
+
+    var wallpaperId: Int
+        get() = prefs.getInt("wallpaperId",R.drawable.wallpaper1)
+        set(value) = prefs.edit { putInt("wallpaperId",value) }
 }

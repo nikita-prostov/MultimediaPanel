@@ -1,5 +1,8 @@
 package com.nks.interactive.multimediapanel.ui.screens.settings
 
+import android.content.Intent
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,18 +22,24 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.nks.interactive.multimediapanel.R
 import com.nks.interactive.multimediapanel.localStorage.AppDataStorage
+import com.nks.interactive.multimediapanel.ui.MainActivity
 import com.nks.interactive.multimediapanel.ui.components.Toolbar
 import org.koin.compose.koinInject
 
@@ -40,39 +49,86 @@ fun SettingsScreen(onSaved: (() -> Unit)? = null) {
 
     var inputIp by remember { mutableStateOf(appDataStorage.ipAddress) }
     var inputPort by remember { mutableStateOf(appDataStorage.port) }
+    var selectedWallpaper by remember { mutableIntStateOf(appDataStorage.wallpaperId) }
     val hasErrors = inputIp.isEmpty() || !isValidIP(inputIp) || inputPort.isEmpty() || !isValidPort(inputPort)
 
-    Column(Modifier.fillMaxSize()){
+    val wallpapers = listOf(
+        R.drawable.wallpaper1,
+        R.drawable.wallpaper2,
+        R.drawable.wallpaper3,
+        R.drawable.wallpaper4
+    )
+
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Toolbar("Настройки")
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(8.dp)) {
+            // IP
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = inputIp,
                 maxLines = 1,
                 isError = inputIp.isNotEmpty() && !isValidIP(inputIp),
-                onValueChange = { inputIp = it},
-                label = {
-                    Text("Введите ip адрес")
-                },
-                placeholder = {
-                    Text("192.137.1.100")
-                },
+                onValueChange = { inputIp = it },
+                label = { Text("Введите ip адрес") },
+                placeholder = { Text("192.168.1.100") },
             )
             Spacer(Modifier.height(16.dp))
+            // Порт
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = inputPort,
                 maxLines = 1,
                 isError = inputPort.isNotEmpty() && !isValidPort(inputPort),
-                onValueChange = { inputPort = it;},
-                label = {
-                    Text("Введите порт")
-                },
-                placeholder = {
-                    Text("5110")
-                }
+                onValueChange = { inputPort = it },
+                label = { Text("Введите порт") },
+                placeholder = { Text("5110") }
             )
+            Spacer(Modifier.height(24.dp))
+            // Обои
+            Text(
+                "Обои",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.height(8.dp))
+            // Сетка с превью обоев
+            var rowIndex = 0
+            while (rowIndex < wallpapers.size) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    for (col in 0..1) {
+                        val index = rowIndex + col
+                        if (index < wallpapers.size) {
+                            val wallpaper = wallpapers[index]
+                            OutlinedCard(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(4.dp)
+                                    .height(120.dp),
+                                onClick = { selectedWallpaper = wallpaper },
+                                border = if (selectedWallpaper == wallpaper)
+                                    BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
+                                else
+                                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            ) {
+                                Image(
+                                    painter = painterResource(wallpaper),
+                                    contentDescription = "Обои ${index + 1}",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        } else {
+                            Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+                rowIndex += 2
+            }
         }
+        // Кнопки
         Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.End) {
             Button(
                 colors = ButtonDefaults.buttonColors(
@@ -81,16 +137,13 @@ fun SettingsScreen(onSaved: (() -> Unit)? = null) {
                 onClick = {
                     inputIp = appDataStorage.ipAddress
                     inputPort = appDataStorage.port
+                    selectedWallpaper = appDataStorage.wallpaperId
                 }) {
                 Text("Сбросить")
             }
             Spacer(Modifier.width(16.dp))
-            if(onSaved != null){
-                Button(
-                    enabled = !hasErrors,
-                    onClick = {
-                        onSaved.invoke()
-                    }) {
+            if (onSaved != null) {
+                Button(onClick = { onSaved.invoke() }) {
                     Text("Закрыть")
                 }
                 Spacer(Modifier.width(16.dp))
@@ -100,6 +153,7 @@ fun SettingsScreen(onSaved: (() -> Unit)? = null) {
                 onClick = {
                     appDataStorage.port = inputPort
                     appDataStorage.ipAddress = inputIp
+                    appDataStorage.wallpaperId = selectedWallpaper
                     onSaved?.invoke()
                 }) {
                 Text("Сохранить")

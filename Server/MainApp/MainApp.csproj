@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CommonDataModule\CommonDataModule.csproj" />
     <ProjectReference Include="..\JobModule\JobModule.csproj" />
     <ProjectReference Include="..\MusicModule\MusicModule.csproj" />
     <ProjectReference Include="..\NotificationModule\NotificationsModule.csproj" />

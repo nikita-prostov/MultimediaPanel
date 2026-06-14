@@ -1,6 +1,7 @@
 package com.nks.interactive.multimediapanel.ui
 
 import android.os.Bundle
+import android.text.Layout
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -11,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,9 +24,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.nks.interactive.multimediapanel.R
 import com.nks.interactive.multimediapanel.localStorage.AppDataStorage
 import com.nks.interactive.multimediapanel.ui.components.NotificationType
 import com.nks.interactive.multimediapanel.ui.components.PopupNotification
+import com.nks.interactive.multimediapanel.ui.screens.main.MainScreen
 import com.nks.interactive.multimediapanel.ui.screens.settings.SettingsScreen
 import com.nks.interactive.multimediapanel.ui.theme.ClientTheme
 import com.nks.interactive.multimediapanel.ui.utils.fullscreen
@@ -43,9 +49,19 @@ class MainActivity : ComponentActivity() {
                 var showNotification by remember { mutableStateOf(false) }
 
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                    Image(
+                        painter = painterResource(appSetting.wallpaperId),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier.fillMaxSize()
+                    )
                     if(showSettings){
                         SettingsScreen{showSettings = false}
                     }
+                    else{
+                        MainScreen(modifier = Modifier.align(Alignment.Center))
+                    }
+
                     AnimatedVisibility(
                         visible = showNotification,
                         modifier = Modifier.align(Alignment.TopCenter),
