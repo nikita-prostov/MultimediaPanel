@@ -12,7 +12,7 @@ import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 
-class NotificationSseClient(private val apiUrl: String) {
+class NotificationSseClient(private val apiUrl: String, private val gson: Gson) {
     private val client = OkHttpClient()
     private var eventSource: EventSource? = null
 
@@ -23,7 +23,7 @@ class NotificationSseClient(private val apiUrl: String) {
         val listener = object : EventSourceListener() {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 try {
-                    val state = Gson().fromJson(data, NotificationDto::class.java)
+                    val state = gson.fromJson(data, NotificationDto::class.java)
                     trySend(state)
                 } catch (e: Exception) {
                 }

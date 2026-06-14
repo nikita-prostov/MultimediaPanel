@@ -1,3 +1,4 @@
+using CommonDataModule.Services;
 using JobModule.Data;
 using JobModule.Services;
 using Microsoft.EntityFrameworkCore;
@@ -95,6 +96,7 @@ builder.Services.AddSingleton<SCSSdkTelemetry>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<JobService>();
 builder.Services.AddSingleton<TransportInfoService>();
+builder.Services.AddSingleton<CommonDataService>();
 builder.Services.AddSingleton<MusicService>(sp =>
 {
     var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();

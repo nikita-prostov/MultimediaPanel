@@ -1,5 +1,7 @@
 package com.nks.interactive.multimediapanel.api
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.nks.interactive.multimediapanel.api.commonData.CommonSseClient
 import com.nks.interactive.multimediapanel.api.health.HealthCheckApiContract
 import com.nks.interactive.multimediapanel.api.job.JobApiContract
@@ -10,9 +12,13 @@ import com.nks.interactive.multimediapanel.api.notification.NotificationApiContr
 import com.nks.interactive.multimediapanel.api.notification.NotificationSseClient
 import com.nks.interactive.multimediapanel.api.transport.TransportInfoApiContract
 import com.nks.interactive.multimediapanel.api.transport.TransportInfoSseClient
+import com.nks.interactive.multimediapanel.gson.LocalDateTimeAdapter
+import com.nks.interactive.multimediapanel.gson.LocalTimeAdapter
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.concurrent.TimeUnit
 
 class ServerClient(ipAddress: String, port: String) {
@@ -26,10 +32,15 @@ class ServerClient(ipAddress: String, port: String) {
         .writeTimeout(10, TimeUnit.SECONDS)
         .build()
 
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(LocalTime::class.java, LocalTimeAdapter())
+        .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
+        .create()
+
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(fullBaseUrl)
         .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 
     val musicApi: MusicApiContract by lazy {
@@ -57,18 +68,18 @@ class ServerClient(ipAddress: String, port: String) {
     }
 
     val commonSse: CommonSseClient by lazy {
-        CommonSseClient(fullBaseUrl.trimEnd('/'))
+        CommonSseClient(fullBaseUrl.trimEnd('/'), gson)
     }
 
     val jobSse: JobSseClient by lazy {
-        JobSseClient(fullBaseUrl.trimEnd('/'))
+        JobSseClient(fullBaseUrl.trimEnd('/'), gson)
     }
 
     val notificationSse: NotificationSseClient by lazy {
-        NotificationSseClient(fullBaseUrl.trimEnd('/'))
+        NotificationSseClient(fullBaseUrl.trimEnd('/'), gson)
     }
 
     val transportInfoSse:TransportInfoSseClient by lazy {
-        TransportInfoSseClient(fullBaseUrl.trimEnd('/'))
+        TransportInfoSseClient(fullBaseUrl.trimEnd('/'), gson)
     }
 }

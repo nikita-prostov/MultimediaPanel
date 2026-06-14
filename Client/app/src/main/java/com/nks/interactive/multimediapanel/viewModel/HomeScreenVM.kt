@@ -4,22 +4,37 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nks.interactive.multimediapanel.api.commonData.CommonSseClient
 import com.nks.interactive.multimediapanel.api.music.MusicApiContract
 import com.nks.interactive.multimediapanel.api.music.MusicSseClient
 import com.nks.interactive.multimediapanel.localStorage.AppDataStorage
+import com.nks.interactive.multimediapanel.models.commonData.CommonData
 import com.nks.interactive.multimediapanel.models.music.PlayerState
 import com.nks.interactive.multimediapanel.models.music.RepeatMode
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class HomeScreenVM(val musicSseClient: MusicSseClient, val musicApi: MusicApiContract, val appDataStorage: AppDataStorage) : ViewModel() {
+class HomeScreenVM(
+    private val musicSseClient: MusicSseClient,
+    private val musicApi: MusicApiContract,
+    private val commonSseClient: CommonSseClient,
+    appDataStorage: AppDataStorage) : ViewModel() {
 
     var playerState = mutableStateOf<PlayerState?>(null)
+    var commonData = mutableStateOf<CommonData?>(null)
+
+    var wallpaperId = appDataStorage.wallpaperId
+    var baseUrl = appDataStorage.fullBaseUrl
 
     fun connect(){
         viewModelScope.launch {
             musicSseClient.playerState.collect {
                 playerState.value = it
+            }
+        }
+        viewModelScope.launch {
+            commonSseClient.commonData.collect {
+                commonData.value = it
             }
         }
     }
@@ -90,5 +105,6 @@ class HomeScreenVM(val musicSseClient: MusicSseClient, val musicApi: MusicApiCon
 
     fun disconnect() {
         musicSseClient.disconnect()
+        commonSseClient.disconnect()
     }
 }

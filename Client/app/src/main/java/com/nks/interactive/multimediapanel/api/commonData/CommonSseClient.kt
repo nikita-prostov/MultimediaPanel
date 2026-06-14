@@ -1,5 +1,6 @@
 package com.nks.interactive.multimediapanel.api.commonData
 
+import android.util.Log
 import com.google.gson.Gson
 import com.nks.interactive.multimediapanel.models.commonData.CommonData
 import kotlinx.coroutines.channels.awaitClose
@@ -12,7 +13,7 @@ import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 
-class CommonSseClient(private val apiUrl: String) {
+class CommonSseClient(private val apiUrl: String, private val gson: Gson) {
     private val client = OkHttpClient()
     private var eventSource: EventSource? = null
 
@@ -23,7 +24,8 @@ class CommonSseClient(private val apiUrl: String) {
         val listener = object : EventSourceListener() {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 try {
-                    val state = Gson().fromJson(data, CommonData::class.java)
+                    val state = gson.fromJson(data, CommonData::class.java)
+                    Log.d("CommonSseClient",data)
                     trySend(state)
                 } catch (e: Exception) {
                 }

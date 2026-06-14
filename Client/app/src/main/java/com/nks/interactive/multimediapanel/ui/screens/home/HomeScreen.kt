@@ -21,36 +21,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.nks.interactive.multimediapanel.R
-import com.nks.interactive.multimediapanel.api.ServerClient
-import com.nks.interactive.multimediapanel.api.music.MusicSseClient
-import com.nks.interactive.multimediapanel.localStorage.AppDataStorage
 import com.nks.interactive.multimediapanel.ui.components.Clock
 import com.nks.interactive.multimediapanel.ui.components.SmallMusicPlayer
 import com.nks.interactive.multimediapanel.viewModel.HomeScreenVM
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 @Composable
 fun HomeScreen() {
-    val appSetting = koinInject<AppDataStorage>()
     val vm = koinViewModel<HomeScreenVM>()
     val playerState by vm.playerState
+    val commonData by vm.commonData
 
     val realDateTime = LocalDateTime.now()
-    val gameDateTime = LocalDateTime.of(2026,1,12,12,5)
-    val nextRestStopAfter = LocalTime.of(8,30)
 
     LaunchedEffect(Unit) {
         vm.connect()
@@ -64,7 +54,7 @@ fun HomeScreen() {
 
     Box{
         Image(
-            painter = painterResource(appSetting.wallpaperId),
+            painter = painterResource(vm.wallpaperId),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxSize()
@@ -74,13 +64,13 @@ fun HomeScreen() {
                 .fillMaxWidth()
                 .padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Clock(realDateTime)
-                Clock(gameDateTime)
+                Clock(commonData?.currentGameTime ?: LocalDateTime.now())
             }
-            val hoursUntilRest = nextRestStopAfter.hour + (nextRestStopAfter.minute / 60.0)
+            val hoursUntilRest = (commonData?.nextRestStopAfter?.hour ?: 0) + ((commonData?.nextRestStopAfter?.minute?:0)/ 60.0)
 
             val (containerColor, contentColor, outlineColor) = when {
                 hoursUntilRest <= 2 -> Triple(
-                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),  // Красный с прозрачностью 25%
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
                     MaterialTheme.colorScheme.error,
                     MaterialTheme.colorScheme.onError
                 )
@@ -114,11 +104,11 @@ fun HomeScreen() {
                     Text("Остановка для сна через: ", color = contentColor)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "${nextRestStopAfter.hour} ${when(nextRestStopAfter.hour){
+                        "${commonData?.nextRestStopAfter?.hour ?: 0} ${when(commonData?.nextRestStopAfter?.hour ?: 0){
                             1 -> "час"
                             2,3,4 -> "часа"
                             else -> "часов"
-                        }} ${nextRestStopAfter.minute} минут",
+                        }} ${commonData?.nextRestStopAfter?.minute ?: 0} минут",
                         color = contentColor
                     )
                 }
@@ -127,7 +117,7 @@ fun HomeScreen() {
             playerState?.let {
                 SmallMusicPlayer(
                     playerState = it,
-                    baseUrl = appSetting.fullBaseUrl,
+                    baseUrl = vm.baseUrl,
                     onPlayClicked = {vm.play()},
                     onPauseClicked = {vm.pause()},
                     onPlayNextClicked = {vm.next()},

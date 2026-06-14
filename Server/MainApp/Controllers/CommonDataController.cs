@@ -12,6 +12,7 @@ namespace MainApp.Controllers
         [HttpGet("connect")]
         public async Task ConnectAsync(CancellationToken ct)
         {
+            Console.WriteLine("CommonDataController: SSE client connected");
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");
             Response.Headers.Append("Connection", "keep-alive");
