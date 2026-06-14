@@ -59,7 +59,7 @@ fun SettingsScreen(onSaved: (() -> Unit)? = null) {
         R.drawable.wallpaper4
     )
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(Modifier.fillMaxSize()) {
         Toolbar("Настройки")
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(8.dp)) {
             // IP

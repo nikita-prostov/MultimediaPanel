@@ -49,12 +49,6 @@ class MainActivity : ComponentActivity() {
                 var showNotification by remember { mutableStateOf(false) }
 
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-                    Image(
-                        painter = painterResource(appSetting.wallpaperId),
-                        contentDescription = null,
-                        contentScale = ContentScale.FillBounds,
-                        modifier = Modifier.fillMaxSize()
-                    )
                     if(showSettings){
                         SettingsScreen{showSettings = false}
                     }
