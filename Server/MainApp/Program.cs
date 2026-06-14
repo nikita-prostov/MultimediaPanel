@@ -19,6 +19,10 @@ using VkNet.Model;
 
 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MultimediaPanel");
 string cachePath = Path.Combine(Path.GetTempPath(), "MultimediaPanel");
+
+if(!Directory.Exists(path)) Directory.CreateDirectory(path);
+if(!Directory.Exists(cachePath)) Directory.CreateDirectory(cachePath);
+
 VkApi? api = null;
 TracksSource source = TracksSource.MyMusic;
 
@@ -26,33 +30,31 @@ start:
 Console.Clear();
 Console.WriteLine("Change track source:");
 Console.WriteLine("1) My music");
-Console.WriteLine("2) Recomendations");
-Console.WriteLine("3) Local cache");
+Console.WriteLine("2) Local cache");
 var key = Console.ReadKey(true);
 var tracks = new List<AudioTrack>();
 string accessToken = "";
 long userId;
 try
 {
-    source = (TracksSource)int.Parse(key.KeyChar.ToString())-1;
-    if (source == TracksSource.Local)
+    if (key.KeyChar == '2')
     {
+        source = TracksSource.Local;
         var tempOptions = new DbContextOptionsBuilder<MusicDbContext>()
             .UseSqlite("Data Source=" + Path.Combine(path, "musicDb.db"))
             .Options;
         using var tempDb = new MusicDbContext(tempOptions);
-        tracks = await TrackLoader.LoadAsync(TracksSource.Local, dbContext: tempDb, path: path);
+        tracks = await TrackLoader.LoadAsync(source, dbContext: tempDb, path: path);
         Console.WriteLine($"Загружено из кэша: {tracks.Count} треков");
     }
-    else if (source == TracksSource.MyMusic || source == TracksSource.Recommendations)
+    else if (key.KeyChar == '1')
     {
-        
         Console.WriteLine("Authorization instruction:");
-        Console.WriteLine("Open link: ");
+        Console.WriteLine("1) Open link: ");
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.WriteLine("https://oauth.vk.com/authorize?client_id=6287487&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=audio,offline&response_type=token&v=5.131");
         Console.ResetColor();
-        Console.WriteLine("after confirmation, copy your new URL:");
+        Console.WriteLine("2) After confirmation, copy your new URL:");
         string url = Console.ReadLine();
         (string? t, long? u) = Parse(url);
         accessToken = t ?? string.Empty;
