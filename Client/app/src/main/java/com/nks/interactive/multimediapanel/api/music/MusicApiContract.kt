@@ -58,7 +58,7 @@ interface MusicApiContract {
 
     @POST("music/load")
     suspend fun load(
-        @Query("source") source: TracksSource? = null,
+        @Query("source") source: TracksSource,
         @Query("page") page: Int = 1
     ): Response<Unit>
 

@@ -25,7 +25,6 @@ class CommonSseClient(private val apiUrl: String, private val gson: Gson) {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 try {
                     val state = gson.fromJson(data, CommonData::class.java)
-                    Log.d("CommonSseClient",data)
                     trySend(state)
                 } catch (e: Exception) {
                 }

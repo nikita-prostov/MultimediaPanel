@@ -2,7 +2,7 @@ package com.nks.interactive.multimediapanel.models.music
 
 data class PlayerState(
     val position: Int,
-    val volume:Float,
+    var volume:Float,
     val isPlaying: Boolean,
     val isShuffled: Boolean,
     val isLoading: Boolean,

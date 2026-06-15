@@ -1,6 +1,7 @@
 package com.nks.interactive.multimediapanel.ui.components
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -69,7 +70,7 @@ fun SmallMusicPlayer(
                 AsyncImage(
                     clipToBounds = true,
                     contentDescription = null,
-                    model = "${baseUrl}/music/thumb?albumId=${playerState.track.albumId}",
+                    model = "${baseUrl}music/thumb?albumId=${playerState.track.albumId}",
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -101,12 +102,10 @@ fun SmallMusicPlayer(
                                 onPauseClicked()
                         })
                     {
-                        Icon(painterResource(if(!playerState.isPlaying && !playerState.isLoading)
-                            R.drawable.play_arrow
-                        else if(!playerState.isLoading)
-                            R.drawable.pause
-                        else
-                            R.drawable.autorenew),null)
+                        Icon(painterResource(
+                            if(!playerState.isPlaying && !playerState.isLoading) R.drawable.play_arrow
+                        else if(!playerState.isLoading) R.drawable.pause
+                        else R.drawable.autorenew),null)
                     }
                     Spacer(Modifier.width(16.dp))
                     Button(onClick = onPlayNextClicked) {
@@ -114,7 +113,11 @@ fun SmallMusicPlayer(
                     }
                     if(playerState.source == TracksSource.Recommendations){
                         Spacer(Modifier.width(16.dp))
-                        Button(onClick = if(playerState.track.isAdded) onRemoveClicked else onAddClicked) {
+                        Button(
+                            onClick =
+                                if(playerState.track.isAdded) onRemoveClicked
+                                else onAddClicked
+                        ) {
                             Icon(painterResource(if(playerState.track.isAdded)R.drawable.delete else R.drawable.add),null)
                         }
                     }
@@ -129,29 +132,20 @@ fun SmallMusicPlayer(
                     Button(
                         onClick = {
                             when (playerState.repeatMode) {
-                                RepeatMode.None ->
-                                    onRepeatModeChanged(RepeatMode.PlayNext)
-                                RepeatMode.PlayNext ->
-                                    onRepeatModeChanged(RepeatMode.RepeatCurrent)
-                                RepeatMode.RepeatCurrent ->
-                                    onRepeatModeChanged(RepeatMode.None) }
-                                  },
+                                RepeatMode.None -> onRepeatModeChanged(RepeatMode.PlayNext)
+                                RepeatMode.PlayNext -> onRepeatModeChanged(RepeatMode.RepeatCurrent)
+                                RepeatMode.RepeatCurrent -> onRepeatModeChanged(RepeatMode.None)
+                            } },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = when (playerState.repeatMode) {
-                                RepeatMode.None ->
-                                    MaterialTheme.colorScheme.background
-                                RepeatMode.PlayNext ->
-                                    MaterialTheme.colorScheme.primary
-                                RepeatMode.RepeatCurrent ->
-                                    MaterialTheme.colorScheme.primary
+                                RepeatMode.None -> MaterialTheme.colorScheme.background
+                                RepeatMode.PlayNext -> MaterialTheme.colorScheme.primary
+                                RepeatMode.RepeatCurrent -> MaterialTheme.colorScheme.primary
                                 },
                             contentColor = when (playerState.repeatMode) {
-                                RepeatMode.None ->
-                                    MaterialTheme.colorScheme.primary
-                                RepeatMode.PlayNext ->
-                                    MaterialTheme.colorScheme.background
-                                RepeatMode.RepeatCurrent ->
-                                    MaterialTheme.colorScheme.background
+                                RepeatMode.None -> MaterialTheme.colorScheme.primary
+                                RepeatMode.PlayNext -> MaterialTheme.colorScheme.background
+                                RepeatMode.RepeatCurrent -> MaterialTheme.colorScheme.background
                             }
                         )
                     ) {
