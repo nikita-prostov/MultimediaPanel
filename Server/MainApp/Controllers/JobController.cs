@@ -42,9 +42,9 @@ namespace MainApp.Controllers
         }
 
         [HttpGet("list")]
-        public IActionResult GetListAsync([FromServices] JobDbContext dbContext, [FromQuery] int page = 1)
+        public async Task<IActionResult> GetListAsync([FromServices] JobDbContext dbContext, [FromQuery] int page = 1)
         {
-            var list = service.GetAll(dbContext,page);
+            var list = await service.GetAll(dbContext,page);
             return Ok(list);
         }
     }

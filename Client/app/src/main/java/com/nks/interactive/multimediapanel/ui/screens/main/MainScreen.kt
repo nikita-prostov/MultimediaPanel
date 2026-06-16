@@ -22,6 +22,7 @@ import com.nks.interactive.multimediapanel.R
 import com.nks.interactive.multimediapanel.ui.components.MenuItem
 import com.nks.interactive.multimediapanel.ui.components.VerticalMenu
 import com.nks.interactive.multimediapanel.ui.screens.home.HomeScreen
+import com.nks.interactive.multimediapanel.ui.screens.job.JobScreen
 import com.nks.interactive.multimediapanel.ui.screens.musicPlayer.MusicPlayerScreen
 import com.nks.interactive.multimediapanel.ui.screens.settings.SettingsScreen
 
@@ -42,6 +43,7 @@ fun MainScreen(modifier: Modifier){
             when(currentScreen){
                 0 -> HomeScreen()
                 1 -> MusicPlayerScreen()
+                2 -> JobScreen()
                 5 -> SettingsScreen()
             }
         }
