@@ -1,5 +1,6 @@
 package com.nks.interactive.multimediapanel.viewModel
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,6 +23,9 @@ class MusicPlayerVM(
     var playerState = mutableStateOf<PlayerState?>(null)
     var baseUrl = appDataStorage.fullBaseUrl
 
+    var tracks = mutableStateOf(emptyList<AudioTrack>())
+    var isLoading = mutableStateOf(false)
+
     fun connect(){
         viewModelScope.launch {
             musicSseClient.playerState.collect {
@@ -38,6 +42,11 @@ class MusicPlayerVM(
                     musicApi.play()
                 }
             }
+        }
+    }
+    fun play(position: Int){
+        viewModelScope.launch {
+            musicApi.play(position)
         }
     }
 
@@ -106,6 +115,31 @@ class MusicPlayerVM(
         }
     }
 
+    fun getList(page:Int = 1){
+        if(page == 1) tracks.value = emptyList()
+        viewModelScope.launch {
+            val res = musicApi.getList(page)
+            if(res.isSuccessful && res.body() != null){
+                val old = tracks.value.toMutableList()
+                old.addAll(res.body()?.tracks ?: emptyList())
+                tracks.value = old
+            }
+        }
+    }
+
+    fun load(source: TracksSource, page:Int = 1){
+        isLoading.value = true
+        var loadPage = page
+        if(source != playerState.value?.source){
+            tracks.value = emptyList()
+            loadPage = 1
+        }
+        viewModelScope.launch{
+            musicApi.load(source,loadPage)
+            getList(page)
+            isLoading.value = false
+        }
+    }
 
     fun disconnect() {
         musicSseClient.disconnect()

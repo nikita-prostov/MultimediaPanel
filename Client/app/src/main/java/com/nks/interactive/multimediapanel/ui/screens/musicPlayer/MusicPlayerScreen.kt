@@ -49,6 +49,9 @@ fun MusicPlayerScreen() {
     Column {
         when (currentScreen) {
             0 -> MainScreen(Modifier.weight(1f).fillMaxWidth(), vm)
+            1 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.MyMusic)
+            2 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.Recommendations)
+            3 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.Local)
         }
         HorizontalMenu(
             items = menuItems,
