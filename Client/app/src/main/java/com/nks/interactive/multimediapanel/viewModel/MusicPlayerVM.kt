@@ -1,5 +1,6 @@
 package com.nks.interactive.multimediapanel.viewModel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -24,6 +25,7 @@ class MusicPlayerVM(
     var baseUrl = appDataStorage.fullBaseUrl
 
     var tracks = mutableStateOf(emptyList<AudioTrack>())
+    var searchResult = mutableStateOf(emptyList<AudioTrack>())
     var isLoading = mutableStateOf(false)
 
     fun connect(){
@@ -47,6 +49,12 @@ class MusicPlayerVM(
     fun play(position: Int){
         viewModelScope.launch {
             musicApi.play(position)
+        }
+    }
+
+    fun play(audioTrack: AudioTrack){
+        viewModelScope.launch {
+            musicApi.playTrack(audioTrack.id,audioTrack.ownerId)
         }
     }
 
@@ -137,6 +145,21 @@ class MusicPlayerVM(
         viewModelScope.launch{
             musicApi.load(source,loadPage)
             getList(page)
+            isLoading.value = false
+        }
+    }
+
+    fun search(query: String){
+        isLoading.value = true
+        var res = emptyList<AudioTrack>()
+        viewModelScope.launch {
+            val response = musicApi.search(query)
+            Log.d("MusicPlayerVM",response.toString())
+            Log.d("MusicPlayerVM",response.body().toString())
+            if(response.isSuccessful && response.body() != null){
+                res = response.body() ?: emptyList()
+                searchResult.value = res
+            }
             isLoading.value = false
         }
     }

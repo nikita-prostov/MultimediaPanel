@@ -52,6 +52,7 @@ fun MusicPlayerScreen() {
             1 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.MyMusic)
             2 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.Recommendations)
             3 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.Local)
+            4 -> SearchScreen(Modifier.weight(1f).fillMaxWidth(),vm)
         }
         HorizontalMenu(
             items = menuItems,

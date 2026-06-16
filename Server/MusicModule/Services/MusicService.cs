@@ -57,7 +57,7 @@ namespace MusicModule.Services
         {
             get
             {
-                UpdateState();
+                state.Position = player.Position;
                 return state;
             }
         }
@@ -72,7 +72,8 @@ namespace MusicModule.Services
                 var file = await Converter.ConvertAsync(cachePath, track.Url.ToString(), track.Id.Value, track.OwnerId.Value);
                 await player.PlayAsync(file);
                 state.Track = new AudioTrack(track, vkApi.UserId.Value);
-                state.Position = 0;
+                state.IsPlaying = true;
+                state.IsLoading = false;
                 isLocked = false;
             }
         }
