@@ -50,14 +50,11 @@ import java.time.LocalTime
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier, vm: MusicPlayerVM) {
-
     val playerState by vm.playerState
     var volume by remember { mutableFloatStateOf(playerState?.volume ?: 0.1f) }
     var position by remember { mutableFloatStateOf(playerState?.position?.toFloat() ?: 0f) }
 
-    Row(modifier
-        .fillMaxHeight()
-        .padding(8.dp)) {
+    Row(modifier.padding(8.dp)) {
         Column(Modifier.weight(1f)) {
             Row(Modifier.padding(12.dp)) {
                 Card(Modifier.size(150.dp)){

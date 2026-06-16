@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.nks.interactive.multimediapanel.api.music.MusicApiContract
 import com.nks.interactive.multimediapanel.api.music.MusicSseClient
 import com.nks.interactive.multimediapanel.localStorage.AppDataStorage
+import com.nks.interactive.multimediapanel.models.music.AudioTrack
 import com.nks.interactive.multimediapanel.models.music.PlayerState
 import com.nks.interactive.multimediapanel.models.music.RepeatMode
 import com.nks.interactive.multimediapanel.models.music.TracksSource
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import retrofit2.http.Query
 
@@ -18,8 +20,8 @@ class MusicPlayerVM(
     appDataStorage: AppDataStorage) : ViewModel() {
 
     var playerState = mutableStateOf<PlayerState?>(null)
-    var isLoading = mutableStateOf(false)
     var baseUrl = appDataStorage.fullBaseUrl
+
     fun connect(){
         viewModelScope.launch {
             musicSseClient.playerState.collect {
@@ -104,29 +106,6 @@ class MusicPlayerVM(
         }
     }
 
-    fun search(query: String){
-        isLoading.value = true
-        viewModelScope.launch {
-            musicApi.search(query)
-            isLoading.value = false
-        }
-    }
-
-    fun load(tracksSource: TracksSource, page:Int = 1){
-        isLoading.value = true
-        viewModelScope.launch {
-            musicApi.load(tracksSource)
-            isLoading.value = false
-        }
-    }
-
-    fun getList(page:Int = 1){
-        isLoading.value = true
-        viewModelScope.launch {
-            musicApi.getList(page)
-            isLoading.value = false
-        }
-    }
 
     fun disconnect() {
         musicSseClient.disconnect()

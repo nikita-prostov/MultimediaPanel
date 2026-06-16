@@ -24,7 +24,7 @@ namespace MusicModule.Loader
                         ArgumentNullException.ThrowIfNull(api);
 
                         Console.WriteLine("Loading you tracks from VK Music...");
-                        tracks = await LoadMyMusicAsync(api);
+                        tracks = await LoadMyMusicAsync(api, page);
                         break;
                     }
                 case TracksSource.Recommendations:
@@ -49,8 +49,9 @@ namespace MusicModule.Loader
             return tracks;
         }
 
-        private static async Task<List<AudioTrack>> LoadMyMusicAsync(VkApi api)
+        private static async Task<List<AudioTrack>> LoadMyMusicAsync(VkApi api, int page)
         {
+            page--;
             if (!api.IsAuthorized || !api.UserId.HasValue)
             {
                 Console.WriteLine("Authorization error...");
@@ -58,13 +59,12 @@ namespace MusicModule.Loader
             }
 
             var res = new List<AudioTrack>();
-            long offset = 0;
 
             var music = await api.Audio.GetAsync(new AudioGetParams
             {
                 OwnerId = api.UserId.Value,
-                Offset = offset,
-                Count = 5999
+                Offset = 100 * page,
+                Count = 100
             });
 
             foreach (var track in music)
