@@ -53,6 +53,7 @@ fun SmallMusicPlayer(
     onSortClicked:() -> Unit = {},
     onRepeatModeChanged:(RepeatMode) -> Unit = {}
 ) {
+    val track = playerState.track ?: return
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -70,13 +71,13 @@ fun SmallMusicPlayer(
                 AsyncImage(
                     clipToBounds = true,
                     contentDescription = null,
-                    model = "${baseUrl}music/thumb?albumId=${playerState.track.albumId}",
+                    model = "${baseUrl}music/thumb?albumId=${track.albumId}",
                     modifier = Modifier.fillMaxSize()
                 )
             }
 
             Column(Modifier.weight(1f).padding(8.dp)) {
-                Text("${playerState.track.title} - ${playerState.track.artist}")
+                Text("${track.title} - ${track.artist}")
                 Spacer(Modifier.height(4.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
                     Button(

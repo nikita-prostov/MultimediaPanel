@@ -126,7 +126,7 @@ fun HomeScreen() {
                     onRemoveClicked = {vm.delete()},
                     onShuffleClicked = {vm.shuffle()},
                     onSortClicked = {vm.sort()},
-                    onRepeatModeChanged = {it -> vm.setRepeatMode(it)}
+                    onRepeatModeChanged = {mode -> vm.setRepeatMode(mode)}
                 )
             }
         }

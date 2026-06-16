@@ -6,7 +6,7 @@ data class PlayerState(
     val isPlaying: Boolean,
     val isShuffled: Boolean,
     val isLoading: Boolean,
-    val track: AudioTrack,
+    val track: AudioTrack?,
     val repeatMode: RepeatMode,
     val source: TracksSource
 )
