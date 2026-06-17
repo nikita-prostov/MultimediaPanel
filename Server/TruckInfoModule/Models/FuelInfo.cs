@@ -9,6 +9,8 @@ namespace TransportInfoModule.Models
         public float Max { get; set; }
         public float Current { get; set; }
         public float AverageConsumption { get; set; }
+        public float AdBlueLevel { get; set; }
+        public float AdBlueMax { get; set; }
         public float Range { get; internal set; }
     }
 }

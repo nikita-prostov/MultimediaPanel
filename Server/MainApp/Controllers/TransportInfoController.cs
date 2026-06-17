@@ -15,7 +15,7 @@ namespace MainApp.Controllers
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");
             Response.Headers.Append("Connection", "keep-alive");
-
+            Console.WriteLine("TransportInfoController: SSE client connected");
             try
             {
                 while (!ct.IsCancellationRequested)
@@ -32,7 +32,7 @@ namespace MainApp.Controllers
             }
             catch (TaskCanceledException)
             {
-                Console.WriteLine("SSE client disconnected");
+                Console.WriteLine("TransportInfoController: SSE client disconnected");
             }
             catch (Exception ex)
             {
@@ -43,7 +43,14 @@ namespace MainApp.Controllers
         [HttpGet("logs")]
         public async Task<IActionResult> GetLogsAsync([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null, [FromQuery] bool activeOnly = false)
         {
-            return Ok(service.GetFullLogs(to, from, activeOnly));
+            return Ok(await service.GetFullLogs(to, from, activeOnly));
+        }
+
+        [HttpPost("logs/clear")]
+        public async Task<IActionResult> ClearLogsAsync()
+        {
+            await service.ClearLogsAsync();  
+            return Ok();
         }
     }
 }

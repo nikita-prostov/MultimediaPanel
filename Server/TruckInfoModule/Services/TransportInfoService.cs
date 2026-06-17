@@ -16,6 +16,8 @@ namespace TransportInfoModule.Services
     {
         private readonly SCSSdkTelemetry telemetry;
         private readonly IServiceScopeFactory scopeFactory;
+        private bool engineStarted = false;
+        private DateTime? engineStartTime = null;
 
         public TransportInfo? TransportInfo { get; private set; } = null;
 
@@ -26,6 +28,13 @@ namespace TransportInfoModule.Services
             this.telemetry = telemetry;
             this.scopeFactory = scopeFactory;
             this.telemetry.Data += OnDataChanged;
+        }
+
+        public async Task ClearLogsAsync()
+        {
+            using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<LogDbContext>();
+            await dbContext.Logs.Where(l => !l.IsActive).ExecuteDeleteAsync();
         }
 
         public async Task<List<FullLogDto>> GetFullLogs(DateTime? from = null, DateTime? to = null, bool activeOnly = false)
@@ -44,6 +53,9 @@ namespace TransportInfoModule.Services
             if (activeOnly)
                 query = query.Where(l => l.IsActive);
 
+            query = query.OrderBy(l => l.IsActive);
+            query = query.OrderBy(l => l.ActiveDateTime);
+
             var logs = await query.ToListAsync();
 
             return [.. logs.Select(l => new FullLogDto
@@ -60,27 +72,35 @@ namespace TransportInfoModule.Services
         {
             LicensePlate = data.TruckValues.ConstantsValues.LicensePlate;
 
-            if (data.TruckValues.CurrentValues.DashboardValues.RPM > 100)
+            TransportInfo = new();
+            WriteFuelInfo(data.TruckValues);
+            WriteTransportDamage(data.TruckValues.CurrentValues, data.TrailerValues);
+            
+
+            if (data.TruckValues.CurrentValues.DashboardValues.RPM > 500)
             {
-                TransportInfo = new();
-                WriteFuelInfo(data.TruckValues);
-                WriteTransportDamage(data.TruckValues.CurrentValues, data.TrailerValues);
-                WriteActiveErrors(
-                    data.TruckValues.CurrentValues,
-                    data.TruckValues.ConstantsValues,
-                    data.CommonValues.GameTime.Date
+                if (!engineStarted)
+                {
+                    engineStarted = true;
+                    engineStartTime = data.CommonValues.GameTime.Date;
+                }
+
+                // Проверяем ошибки только через 3 секунды после запуска
+                if (engineStartTime.HasValue && (data.CommonValues.GameTime.Date - engineStartTime.Value).TotalSeconds > 3)
+                {
+                    WriteActiveErrors(
+                        data.TruckValues.CurrentValues,
+                        data.TruckValues.ConstantsValues,
+                        data.CommonValues.GameTime.Date
                     );
 
-                try
-                {
-                    UpdateLogs(data.CommonValues.GameTime.Date);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message.ToString());
-                    if (ex.InnerException != null)
+                    try
                     {
-                        Console.WriteLine(ex.InnerException.Message.ToString());
+                        UpdateLogs(data.CommonValues.GameTime.Date);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
                     }
                 }
             }
@@ -97,6 +117,8 @@ namespace TransportInfoModule.Services
             TransportInfo.FuelInfo.Current = fuelInfo.Amount;
             TransportInfo.FuelInfo.Max = truck.ConstantsValues.CapacityValues.Fuel;
             TransportInfo.FuelInfo.AverageConsumption = fuelInfo.AverageConsumption * 100;
+            TransportInfo.FuelInfo.AdBlueLevel = truck.CurrentValues.DashboardValues.AdBlue;
+            TransportInfo.FuelInfo.AdBlueMax = truck.ConstantsValues.CapacityValues.AdBlue;
             TransportInfo.FuelInfo.Range = fuelInfo.Range;
         }
 
@@ -135,82 +157,76 @@ namespace TransportInfoModule.Services
 
             var dashboard = current.DashboardValues;
             var damage = current.DamageValues;
-            var fuel = dashboard.FuelValue;
 
-            if (fuel.Amount < constants.WarningFactorValues.Fuel) 
-                TransportInfo.Errors.Add(new() { 
-                    Code = ErrorCodes.FuelLow, 
-                    DateTime = dateTime,
-                    Description = ErrorCodes.GetDescription(ErrorCodes.FuelLow)
-                });
-
-            if (dashboard.AdBlue < constants.WarningFactorValues.AdBlue)
-                TransportInfo.Errors.Add(new() { 
-                    Code = ErrorCodes.AdBlueLow,
-                    DateTime = dateTime,
-                    Description = ErrorCodes.GetDescription(ErrorCodes.AdBlueLow)
-                });
-
-            if (current.MotorValues.BrakeValues.AirPressure < constants.WarningFactorValues.AirPressure)  // psi
-                TransportInfo.Errors.Add(new() { 
+            if (dashboard.WarningValues.AirPressure)
+            {
+                TransportInfo.Errors.Add(new()
+                {
                     Code = ErrorCodes.AirPressureLow,
                     DateTime = dateTime,
                     Description = ErrorCodes.GetDescription(ErrorCodes.AirPressureLow)
                 });
+            }
 
-            if (current.MotorValues.BrakeValues.AirPressure < 30f || current.DashboardValues.WarningValues.AirPressureEmergency)  // Критическое
-                TransportInfo.Errors.Add(new() { 
+            if (dashboard.WarningValues.AirPressureEmergency)
+            {
+                TransportInfo.Errors.Add(new()
+                {
                     Code = ErrorCodes.AirPressureEmergency,
                     DateTime = dateTime,
                     Description = ErrorCodes.GetDescription(ErrorCodes.AirPressureEmergency)
                 });
+            }
 
-            if (dashboard.OilPressure < constants.WarningFactorValues.OilPressure)
-                TransportInfo.Errors.Add(new() {
+            if (dashboard.WarningValues.FuelW)
+            {
+                TransportInfo.Errors.Add(new()
+                {
+                    Code = ErrorCodes.FuelLow,
+                    DateTime = dateTime,
+                    Description = ErrorCodes.GetDescription(ErrorCodes.FuelLow)
+                });
+            }
+
+            if (dashboard.WarningValues.AdBlue)
+            {
+                TransportInfo.Errors.Add(new()
+                {
+                    Code = ErrorCodes.AdBlueLow,
+                    DateTime = dateTime,
+                    Description = ErrorCodes.GetDescription(ErrorCodes.AdBlueLow)
+                });
+            }
+
+            if (dashboard.WarningValues.OilPressure)
+            {
+                TransportInfo.Errors.Add(new()
+                {
                     Code = ErrorCodes.EngineOilPressureLow,
                     DateTime = dateTime,
                     Description = ErrorCodes.GetDescription(ErrorCodes.EngineOilPressureLow)
                 });
+            }
 
-            if (dashboard.WaterTemperature > (constants.WarningFactorValues.WaterTemperature + 15))
-                TransportInfo.Errors.Add(new() {
-                    Code = ErrorCodes.EngineCoolantTemperatureCritical,
-                    DateTime = dateTime,
-                    Description = ErrorCodes.GetDescription(ErrorCodes.EngineCoolantTemperatureCritical)
-                });
-            else if (dashboard.WaterTemperature > constants.WarningFactorValues.WaterTemperature)
-                TransportInfo.Errors.Add(new() { 
+            if (dashboard.WarningValues.WaterTemperature)
+            {
+                TransportInfo.Errors.Add(new()
+                {
                     Code = ErrorCodes.EngineCoolantTemperatureWarning,
                     DateTime = dateTime,
                     Description = ErrorCodes.GetDescription(ErrorCodes.EngineCoolantTemperatureWarning)
                 });
+            }
 
-            if (dashboard.OilTemperature > 140f)
-                TransportInfo.Errors.Add(new() { 
-                    Code = ErrorCodes.EngineOilTemperatureCritical,
-                    DateTime = dateTime,
-                    Description = ErrorCodes.GetDescription(ErrorCodes.EngineOilTemperatureCritical)
-                });
-            else if (dashboard.OilTemperature > 120f)
-                TransportInfo.Errors.Add(new() { 
-                    Code = ErrorCodes.EngineOilTemperatureWarning, 
-                    DateTime = dateTime,
-                    Description = ErrorCodes.GetDescription(ErrorCodes.EngineOilTemperatureWarning)
-                });
-
-            if (dashboard.BatteryVoltage < constants.WarningFactorValues.BatteryVoltage)
-                TransportInfo.Errors.Add(new() {
+            if (dashboard.WarningValues.BatteryVoltage)
+            {
+                TransportInfo.Errors.Add(new()
+                {
                     Code = ErrorCodes.BatteryVoltageLow,
                     DateTime = dateTime,
                     Description = ErrorCodes.GetDescription(ErrorCodes.BatteryVoltageLow)
                 });
-            else if (dashboard.BatteryVoltage > 15)
-                TransportInfo.Errors.Add(new()
-                {
-                    Code = ErrorCodes.BatteryVoltageHigh,
-                    DateTime = dateTime,
-                    Description = ErrorCodes.GetDescription(ErrorCodes.BatteryVoltageHigh)
-                });
+            }
 
             if (damage.Engine > 0.3f)
                 TransportInfo.Errors.Add(new() { 
@@ -244,10 +260,12 @@ namespace TransportInfoModule.Services
             using var scope = scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<LogDbContext>();
 
+            // Все активные ошибки из БД
             var activeErrors = await dbContext.Logs
                 .Where(l => l.IsActive && l.LicensePlate == LicensePlate)
                 .ToListAsync();
 
+            // Деактивируем те, которых больше нет в текущем списке
             foreach (var activeError in activeErrors)
             {
                 if (!TransportInfo.Errors.Any(e => e.Code == activeError.Code))
@@ -257,21 +275,25 @@ namespace TransportInfoModule.Services
                 }
             }
 
+            // Добавляем новые ошибки (проверяем и в activeErrors, и в только что добавленных)
+            var newlyAddedCodes = new HashSet<string>();  // ← Запоминаем, что уже добавили
+
             foreach (var error in TransportInfo.Errors)
             {
-                var existingError = activeErrors.FirstOrDefault(e => e.Code == error.Code);
+                // Проверяем, есть ли ошибка в БД (activeErrors) ИЛИ уже добавлена в этом кадре
+                if (activeErrors.Any(e => e.Code == error.Code) || newlyAddedCodes.Contains(error.Code))
+                    continue;  // ← Уже есть — пропускаем
 
-                if (existingError == null)
+                var newLog = new Log
                 {
-                    dbContext.Logs.Add(new Log
-                    {
-                        LicensePlate = LicensePlate,
-                        Code = error.Code,
-                        ActiveDateTime = error.DateTime,
-                        IsActive = true,
-                        Description = error.Description
-                    });
-                }
+                    LicensePlate = LicensePlate,
+                    Code = error.Code,
+                    ActiveDateTime = error.DateTime,
+                    IsActive = true,
+                    Description = error.Description
+                };
+                dbContext.Logs.Add(newLog);
+                newlyAddedCodes.Add(error.Code);  // ← Запоминаем
             }
 
             await dbContext.SaveChangesAsync();

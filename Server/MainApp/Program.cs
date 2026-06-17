@@ -13,6 +13,7 @@ using SCSSdkClient;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Web;
+using TransportInfoModule.Data;
 using TransportInfoModule.Services;
 using VkNet;
 using VkNet.Enums.Filters;
@@ -92,6 +93,10 @@ builder.Services.AddDbContext<JobDbContext>(options => options.UseSqlite("Data S
 var musicDbFilePath = Path.Combine(path, "musicDb.db");
 builder.Services.AddDbContext<MusicDbContext>(options => options.UseSqlite("Data Source=" + musicDbFilePath));
 
+var logDbFilePath = Path.Combine(path, "errorLogs.db");
+builder.Services.AddDbContext<LogDbContext>(options => options.UseSqlite("Data Source=" + logDbFilePath));
+
+
 builder.Services.AddSingleton<SCSSdkTelemetry>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddSingleton<JobService>();
@@ -142,6 +147,8 @@ using (var scope = app.Services.CreateScope())
     await db1.Database.MigrateAsync();
     var db2 = scope.ServiceProvider.GetRequiredService<MusicDbContext>();
     await db2.Database.MigrateAsync();
+    var db3 = scope.ServiceProvider.GetRequiredService<LogDbContext>();
+    await db3.Database.MigrateAsync();
 }
 
 app.Run("http://0.0.0.0:5110");

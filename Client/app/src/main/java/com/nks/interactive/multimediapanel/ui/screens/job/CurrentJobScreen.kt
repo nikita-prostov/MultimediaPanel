@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.nks.interactive.multimediapanel.R
 import com.nks.interactive.multimediapanel.models.job.Cargo
 import com.nks.interactive.multimediapanel.models.job.Point
+import com.nks.interactive.multimediapanel.ui.components.IconText
 import com.nks.interactive.multimediapanel.ui.components.Toolbar
 import com.nks.interactive.multimediapanel.viewModel.JobScreenVM
 import java.time.LocalDateTime
@@ -40,22 +41,11 @@ fun CurrentJobScreen(modifier:Modifier = Modifier, vm: JobScreenVM){
         if(jobInfo != null){
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                 if(!jobInfo!!.isLoaded){
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.warning),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Ожидает загрузки...",
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
+                    IconText(
+                        modifier = Modifier.fillMaxWidth(),
+                        text =  "Ожидает загрузки...",
+                        icon = R.drawable.warning
+                    )
                     Spacer(Modifier.height(8.dp))
                 }
                 if(jobInfo!!.isLate){
@@ -66,22 +56,11 @@ fun CurrentJobScreen(modifier:Modifier = Modifier, vm: JobScreenVM){
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.access_time),
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "Опоздание на: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
+                        IconText(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Опопздание на: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
+                            icon = R.drawable.access_time
+                        )
                     }
                 }
                 PointCard(jobInfo!!.source, Modifier.fillMaxWidth(),true)
@@ -92,22 +71,11 @@ fun CurrentJobScreen(modifier:Modifier = Modifier, vm: JobScreenVM){
                 Spacer(Modifier.height(8.dp))
                 if(jobInfo!!.isLoaded) {
                     if (!jobInfo!!.isLate) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.access_time),
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp),
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "Осталось времени: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
+                        IconText(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Осталось времени: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
+                            icon = R.drawable.access_time
+                        )
                     } else {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -116,58 +84,25 @@ fun CurrentJobScreen(modifier:Modifier = Modifier, vm: JobScreenVM){
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.access_time),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = MaterialTheme.colorScheme.onBackground
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    text = "Опоздание на: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
+                            IconText(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "Опопздание на: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
+                                icon = R.drawable.access_time
+                            )
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.straighten),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Расстояние: " + jobInfo!!.planedDistance + "км",
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                    IconText(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Расстояние: " + jobInfo!!.planedDistance + "км",
+                        icon = R.drawable.sports_score
+                    )
                     Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.payments),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Доход: " + jobInfo!!.income + "€",
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                    IconText(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Доход: " + jobInfo!!.income + "€",
+                        icon = R.drawable.payments
+                    )
                     Spacer(Modifier.height(8.dp))
                 }
             }
@@ -186,21 +121,21 @@ fun CurrentJobScreen(modifier:Modifier = Modifier, vm: JobScreenVM){
 private fun PointCard(point: Point, modifier: Modifier, isSource: Boolean){
     Card(modifier) {
         Column(Modifier.fillMaxWidth().padding(8.dp)) {
-            Row(Modifier.fillMaxWidth()) {
-                Icon(painterResource(if(isSource) R.drawable.north_east else R.drawable.south_west), null)
-                Spacer(Modifier.width(8.dp))
-                Text(if(isSource) "Отправитель" else "Получатель")
-            }
-            Row(Modifier.fillMaxWidth()) {
-                Icon(painterResource(R.drawable.place), null)
-                Spacer(Modifier.width(8.dp))
-                Text("Город: ${point.city}")
-            }
-            Row(Modifier.fillMaxWidth()) {
-                Icon(painterResource(R.drawable.apartment), null)
-                Spacer(Modifier.width(8.dp))
-                Text("Компания: ${point.company}")
-            }
+            IconText(
+                modifier = Modifier.fillMaxWidth(),
+                text = if(isSource) "Отправитель" else "Получатель",
+                icon = if(isSource) R.drawable.north_east else R.drawable.south_west
+            )
+            IconText(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Город: ${point.city}",
+                icon = R.drawable.place
+            )
+            IconText(
+                modifier = Modifier.fillMaxWidth(),
+                text = "Компания: ${point.company}",
+                icon = R.drawable.apartment
+            )
         }
     }
 }
@@ -209,14 +144,10 @@ private fun PointCard(point: Point, modifier: Modifier, isSource: Boolean){
 private fun CargoCard(cargo: Cargo, modifier: Modifier){
     Card(modifier) {
         Column(Modifier.fillMaxWidth().padding(8.dp)) {
-            Row(
+            IconText(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(painterResource(R.drawable.inventory_2), null)
-                Spacer(Modifier.width(8.dp))
-                Text("Груз")
-            }
+                text = "Груз",
+                icon = R.drawable.inventory_2)
             Text("Наименование: " + cargo.name)
             Text("Масса: " + cargo.mass/1000 + " тонн")
             Text("Повреждения: " + cargo.damage + "%")
@@ -225,7 +156,6 @@ private fun CargoCard(cargo: Cargo, modifier: Modifier){
 }
 
 fun LocalDateTime.toDurationHoursAndMinutes(): String {
-    // Вычисляем общее количество часов и минут от начала эпохи (0001-01-01T00:00)
     val totalHours = (dayOfYear - 1) * 24 + hour
     val totalMinutes = minute
     return "${totalHours}ч ${totalMinutes}м"
