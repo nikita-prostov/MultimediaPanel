@@ -20,9 +20,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun JobScreen(){
-    val menuItems = mutableListOf<MenuItem>()
     val vm = koinViewModel<JobScreenVM>()
-    var currentScreen by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         vm.connect()
@@ -33,21 +31,7 @@ fun JobScreen(){
         }
     }
 
-    menuItems.add(MenuItem(R.drawable.assignment,"Текущее"))
-    menuItems.add(MenuItem(R.drawable.list,"История"))
-
     Column {
-        when (currentScreen) {
-            0 -> CurrentJobScreen(Modifier.weight(1f).fillMaxWidth().padding(start = 24.dp),vm)
-            1 -> HistoryJobScreen(Modifier.weight(1f).fillMaxWidth().padding(start = 24.dp),vm)
-        }
-        HorizontalMenu(
-            items = menuItems,
-            onItemChanged =
-                {
-                    currentScreen = it
-                },
-            showTitle = true
-        )
+        CurrentJobScreen(Modifier.weight(1f).fillMaxWidth().padding(start = 24.dp),vm)
     }
 }

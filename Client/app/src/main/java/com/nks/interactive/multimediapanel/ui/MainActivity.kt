@@ -49,23 +49,10 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val showSettings by vm.showSettings
-                var notification by vm.notification
 
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                     if(showSettings) SettingsScreen{vm.showSettings.value = false}
                     else MainScreen(modifier = Modifier.align(Alignment.Center))
-
-                    AnimatedVisibility(
-                        visible = notification != null,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-                        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
-                    ) {
-                        PopupNotification(
-                            title = notification?.title ?: "",
-                            subTitle = notification?.subTitle ?: "",
-                            type = notification?.type ?: NotificationType.None)
-                    }
                 }
             }
         }

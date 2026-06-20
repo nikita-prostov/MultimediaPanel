@@ -40,12 +40,5 @@ namespace MainApp.Controllers
                 Console.WriteLine($"SSE error: {ex.Message}");
             }
         }
-
-        [HttpGet("list")]
-        public async Task<IActionResult> GetListAsync([FromServices] JobDbContext dbContext, [FromQuery] int page = 1)
-        {
-            var list = await service.GetAll(dbContext,page);
-            return Ok(list);
-        }
     }
 }
