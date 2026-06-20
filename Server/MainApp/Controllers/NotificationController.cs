@@ -20,6 +20,8 @@ namespace MainApp.Controllers
             Response.Headers.Append("Cache-Control", "no-cache");
             Response.Headers.Append("Connection", "keep-alive");
 
+            Console.WriteLine("NotificationController: SSE client connected");
+
             try
             {
                 while (!ct.IsCancellationRequested)

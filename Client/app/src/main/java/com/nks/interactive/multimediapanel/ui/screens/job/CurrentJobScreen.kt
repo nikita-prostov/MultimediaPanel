@@ -69,42 +69,40 @@ fun CurrentJobScreen(modifier:Modifier = Modifier, vm: JobScreenVM){
                 Spacer(Modifier.height(8.dp))
                 CargoCard(jobInfo!!.cargo,Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
-                if(jobInfo!!.isLoaded) {
-                    if (!jobInfo!!.isLate) {
+                if (!jobInfo!!.isLate) {
+                    IconText(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Осталось времени: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
+                        icon = R.drawable.access_time
+                    )
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
                         IconText(
                             modifier = Modifier.fillMaxWidth(),
-                            text = "Осталось времени: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
+                            text = "Опопздание на: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
                             icon = R.drawable.access_time
                         )
-                    } else {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            IconText(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = "Опопздание на: " + jobInfo!!.remainingDeliveryTime.toDurationHoursAndMinutes(),
-                                icon = R.drawable.access_time
-                            )
-                        }
                     }
-                    Spacer(Modifier.height(8.dp))
-                    IconText(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Расстояние: " + jobInfo!!.planedDistance + "км",
-                        icon = R.drawable.sports_score
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    IconText(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Доход: " + jobInfo!!.income + "€",
-                        icon = R.drawable.payments
-                    )
-                    Spacer(Modifier.height(8.dp))
                 }
+                Spacer(Modifier.height(8.dp))
+                IconText(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Расстояние: " + jobInfo!!.planedDistance + "км",
+                    icon = R.drawable.sports_score
+                )
+                Spacer(Modifier.height(8.dp))
+                IconText(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Доход: " + jobInfo!!.income + "€",
+                    icon = R.drawable.payments
+                )
+                Spacer(Modifier.height(8.dp))
             }
         }
         else{
