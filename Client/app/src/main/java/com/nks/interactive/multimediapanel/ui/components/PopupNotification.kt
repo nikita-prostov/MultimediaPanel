@@ -20,46 +20,42 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nks.interactive.multimediapanel.R
+import com.nks.interactive.multimediapanel.models.notification.NotificationType
 
 @Composable
-fun PopupNotification(title: String, subTitle: String, type: NotificationType = NotificationType.Default) {
+fun PopupNotification(title: String, subTitle: String, type: NotificationType = NotificationType.None) {
     val (containerColor, contentColor, iconTint) = when (type) {
-        NotificationType.Default -> Triple(
-            MaterialTheme.colorScheme.surface,
-            MaterialTheme.colorScheme.onSurface,
-            MaterialTheme.colorScheme.onSurface
-        )
-        NotificationType.Warning -> Triple(
+        NotificationType.Tollgate -> Triple(
             Color(0xFFFFF3CD),
             Color(0xFF664D03),
             Color(0xFFE6A800)
         )
-        NotificationType.Critical -> Triple(
+        NotificationType.Fined -> Triple(
             MaterialTheme.colorScheme.errorContainer,
             MaterialTheme.colorScheme.onErrorContainer,
             MaterialTheme.colorScheme.error
+        )
+        else -> Triple(
+            MaterialTheme.colorScheme.surface,
+            MaterialTheme.colorScheme.onSurface,
+            MaterialTheme.colorScheme.onSurface
         )
     }
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
-        colors =
-            if(type != NotificationType.Default)
-                CardDefaults.cardColors(
-                    containerColor = containerColor,
-                    contentColor = contentColor
-                )
-            else
-                CardDefaults.cardColors()
+        colors = CardDefaults.cardColors(
+                containerColor = containerColor,
+                contentColor = contentColor)
     ) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(
                         when (type) {
-                            NotificationType.Warning -> R.drawable.warning
-                            NotificationType.Default -> R.drawable.info
-                            else -> R.drawable.critical
+                            NotificationType.Tollgate -> R.drawable.warning
+                            NotificationType.Fined -> R.drawable.critical
+                            else -> R.drawable.info
                         }
                     ),
                     modifier = Modifier.width(32.dp).height(32.dp),
@@ -81,9 +77,4 @@ fun PopupNotification(title: String, subTitle: String, type: NotificationType = 
             )
         }
     }
-}
-enum class NotificationType {
-    Default,
-    Warning,
-    Critical
 }

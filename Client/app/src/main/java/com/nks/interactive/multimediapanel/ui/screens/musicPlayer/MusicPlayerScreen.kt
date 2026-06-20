@@ -43,7 +43,6 @@ fun MusicPlayerScreen() {
     menuItems.add(MenuItem(R.drawable.queue_music,"Мои треки"))
     menuItems.add(MenuItem(R.drawable.star_rate,"Рекомендации"))
     menuItems.add(MenuItem(R.drawable.save_alt,"Сохранённые"))
-    menuItems.add(MenuItem(R.drawable.manage_search,"Поиск"))
 
     var currentScreen by remember { mutableIntStateOf(0) }
     Column {
@@ -52,7 +51,6 @@ fun MusicPlayerScreen() {
             1 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.MyMusic)
             2 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.Recommendations)
             3 -> TrackListScreen(Modifier.weight(1f).fillMaxWidth(), vm, TracksSource.Local)
-            4 -> SearchScreen(Modifier.weight(1f).fillMaxWidth(),vm)
         }
         HorizontalMenu(
             items = menuItems,

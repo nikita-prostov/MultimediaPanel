@@ -63,7 +63,7 @@ try
         userId = u ?? 0L;
         api = await AuthorizeApp(userId, accessToken);
 
-        tracks = await TrackLoader.LoadAsync(source, api,page:1);
+        tracks = await TrackLoader.LoadAsync(source, api,page:0);
     }
     else
     {

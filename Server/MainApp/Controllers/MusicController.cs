@@ -40,9 +40,6 @@ namespace MainApp.Controllers
                 Console.WriteLine($"SSE error: {ex.Message}");
             }
         }
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] string query, [FromQuery] bool ignoreCase) => Ok(await service.SearchAsync(query, ignoreCase));
-        
 
         [HttpGet("list")]
         public IActionResult GetList([FromQuery] int page = 1) => Ok(service.GetList(page));
@@ -125,13 +122,6 @@ namespace MainApp.Controllers
         {
             if (position < 0) await service.PlayAsync();
             else await service.PlayAsync(position);
-            return Ok();
-        }
-
-        [HttpPost("play/track")]
-        public async Task<IActionResult> PlayTrackAsync([FromQuery] long audioId, [FromQuery] long ownerId)
-        {
-            await service.PlayTrackAsync(audioId,ownerId);
             return Ok();
         }
 

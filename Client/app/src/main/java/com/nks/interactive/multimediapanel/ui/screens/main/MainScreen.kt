@@ -24,6 +24,7 @@ import com.nks.interactive.multimediapanel.ui.components.VerticalMenu
 import com.nks.interactive.multimediapanel.ui.screens.home.HomeScreen
 import com.nks.interactive.multimediapanel.ui.screens.job.JobScreen
 import com.nks.interactive.multimediapanel.ui.screens.musicPlayer.MusicPlayerScreen
+import com.nks.interactive.multimediapanel.ui.screens.notification.NotificationScreen
 import com.nks.interactive.multimediapanel.ui.screens.settings.SettingsScreen
 import com.nks.interactive.multimediapanel.ui.screens.transportInfo.TransportInfoScreen
 
@@ -46,6 +47,7 @@ fun MainScreen(modifier: Modifier){
                 1 -> MusicPlayerScreen()
                 2 -> JobScreen()
                 3 -> TransportInfoScreen()
+                4 -> NotificationScreen()
                 5 -> SettingsScreen()
             }
         }

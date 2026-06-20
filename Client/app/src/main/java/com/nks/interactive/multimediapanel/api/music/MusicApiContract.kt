@@ -1,26 +1,17 @@
 package com.nks.interactive.multimediapanel.api.music
 
-import com.nks.interactive.multimediapanel.models.music.AudioTrack
 import com.nks.interactive.multimediapanel.models.music.GetListResponse
 import com.nks.interactive.multimediapanel.models.music.RepeatMode
 import com.nks.interactive.multimediapanel.models.music.TracksSource
-import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
-import retrofit2.http.Streaming
 
 interface MusicApiContract {
     @POST("music/play")
     suspend fun play(@Query("position") position: Int = -1): Response<Unit>
-
-    @POST("music/play/track")
-    suspend fun playTrack(
-        @Query("audioId") audioId: Long,
-        @Query("ownerId") ownerId: Long
-    ): Response<Unit>
 
     @POST("music/pause")
     suspend fun pause(): Response<Unit>
@@ -31,7 +22,6 @@ interface MusicApiContract {
     @POST("music/play/prev")
     suspend fun prev(): Response<Unit>
 
-    // ========== Управление ==========
     @POST("music/shuffle")
     suspend fun shuffle(): Response<Unit>
 
@@ -50,12 +40,6 @@ interface MusicApiContract {
     @GET("music/list")
     suspend fun getList(@Query("page") page: Int = 1): Response<GetListResponse>
 
-    @GET("music/search")
-    suspend fun search(
-        @Query("query") query: String,
-        @Query("ignoreCase") ignoreCase: Boolean = true
-    ): Response<List<AudioTrack>>
-
     @POST("music/load")
     suspend fun load(
         @Query("source") source: TracksSource,
@@ -73,8 +57,4 @@ interface MusicApiContract {
         @Query("audioId") audioId: Long,
         @Query("ownerId") ownerId: Long
     ): Response<Unit>
-
-    @GET("music/thumb")
-    @Streaming
-    suspend fun getThumb(@Query("albumId") albumId: Long): Response<ResponseBody>
 }

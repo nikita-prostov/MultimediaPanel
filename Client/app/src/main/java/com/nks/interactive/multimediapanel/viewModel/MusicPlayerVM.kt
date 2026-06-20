@@ -1,7 +1,5 @@
 package com.nks.interactive.multimediapanel.viewModel
 
-import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,9 +10,7 @@ import com.nks.interactive.multimediapanel.models.music.AudioTrack
 import com.nks.interactive.multimediapanel.models.music.PlayerState
 import com.nks.interactive.multimediapanel.models.music.RepeatMode
 import com.nks.interactive.multimediapanel.models.music.TracksSource
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import retrofit2.http.Query
 
 class MusicPlayerVM(
     private val musicSseClient: MusicSseClient,
@@ -25,7 +21,6 @@ class MusicPlayerVM(
     var baseUrl = appDataStorage.fullBaseUrl
 
     var tracks = mutableStateOf(emptyList<AudioTrack>())
-    var searchResult = mutableStateOf(emptyList<AudioTrack>())
     var isLoading = mutableStateOf(false)
 
     fun connect(){
@@ -41,20 +36,20 @@ class MusicPlayerVM(
             if(playerState.value!!.isLoading) return
             if(!playerState.value!!.isPlaying){
                 viewModelScope.launch {
-                    musicApi.play()
+                    try{
+                        musicApi.play()
+                    }
+                    catch(_: Exception){}
                 }
             }
         }
     }
     fun play(position: Int){
         viewModelScope.launch {
-            musicApi.play(position)
-        }
-    }
-
-    fun play(audioTrack: AudioTrack){
-        viewModelScope.launch {
-            musicApi.playTrack(audioTrack.id,audioTrack.ownerId)
+            try{
+                musicApi.play(position)
+            }
+            catch(_: Exception){}
         }
     }
 
@@ -71,13 +66,19 @@ class MusicPlayerVM(
 
     fun next(){
         viewModelScope.launch {
-            musicApi.next()
+            try{
+                musicApi.next()
+            }
+            catch(_: Exception){}
         }
     }
 
     fun prev(){
         viewModelScope.launch {
-            musicApi.prev()
+            try{
+                musicApi.prev()
+            }
+            catch(_: Exception){}
         }
     }
 
@@ -145,21 +146,6 @@ class MusicPlayerVM(
         viewModelScope.launch{
             musicApi.load(source,loadPage)
             getList(page)
-            isLoading.value = false
-        }
-    }
-
-    fun search(query: String){
-        isLoading.value = true
-        var res = emptyList<AudioTrack>()
-        viewModelScope.launch {
-            val response = musicApi.search(query)
-            Log.d("MusicPlayerVM",response.toString())
-            Log.d("MusicPlayerVM",response.body().toString())
-            if(response.isSuccessful && response.body() != null){
-                res = response.body() ?: emptyList()
-                searchResult.value = res
-            }
             isLoading.value = false
         }
     }
